@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Predicaciones</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+
+    <!-- APK APLICAR:     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">     -->
+
     <style>
         :root {
             --bg-color: #f4f6f9;
@@ -19,7 +23,7 @@
         .nav-icons i { margin-left: 15px; cursor: pointer; font-size: 1.2rem; }
         
         /* Info Superior */
-        .info-bar { background: #e0e0e0; text-align: center; padding: 5px; font-size: 0.85rem; color: #555; }
+        .info-bar { background: #e0e0e0; text-align: center; padding: 10px; font-size: 1rem; color: #333; font-weight: bold; }
         
         /* Contenedores de Pantallas */
         .screen { display: none; padding: 20px; }
@@ -69,11 +73,10 @@
 <body>
 
     <div class="navbar">
-        <h1 id="app-title"><i class="fas fa-calendar-alt"></i> Predicaciones</h1>
+        <h1 id="app-title" style="font-size: 1.1rem; letter-spacing: 1px;"><i class="fas fa-bible"></i> FRESNILLO SUR</h1>
         <div class="nav-icons">
             <i class="fas fa-sync-alt" onclick="forzarDescargaPublica()" id="btn-sync" title="Actualizar desde la nube"></i>
             <i class="fas fa-calendar-alt" onclick="abrirCalendarioMensual()" id="btn-calendar"></i>
-            <i class="fas fa-history" onclick="abrirAuditoria()" style="display: none;" id="btn-audit"></i>
             <i class="fas fa-cog" onclick="showScreen('configScreen')" style="display: none;" id="btn-config"></i>
             <i class="fas fa-plus-circle" onclick="abrirFormularioPredicacion()" style="display: none;" id="btn-add"></i>
             <i class="fas fa-sign-in-alt" onclick="showScreen('loginScreen')" id="btn-login"></i>
@@ -83,7 +86,17 @@
     <div class="info-bar" id="info-bar">Sábado: Calculando... | Usuario: Invitado</div>
 
     <div id="mainScreen" class="screen active">
-        <h3 style="margin-top:0;"><i class="fas fa-clock"></i> Próximo Sábado</h3>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <button style="width: auto; padding: 2px 6px; font-size: 0.75rem; background: transparent; color: var(--primary); border: 1px solid var(--primary); border-radius: 4px; margin: 0; box-shadow: none;" onclick="cambiarSemana(-1)" title="Sábado Anterior"><i class="fas fa-chevron-left"></i></button>
+                <h3 style="margin: 0; min-width: 140px; text-align: center; font-size: 0.95rem;" id="titulo-sabado-principal"><i class="fas fa-clock"></i> Próximo Sábado</h3>
+                <button style="width: auto; padding: 2px 6px; font-size: 0.75rem; background: transparent; color: var(--primary); border: 1px solid var(--primary); border-radius: 4px; margin: 0; box-shadow: none;" onclick="cambiarSemana(1)" title="Sábado Siguiente"><i class="fas fa-chevron-right"></i></button>
+            </div>
+            <div style="display:flex; gap:5px;">
+                <button id="btn-regresar-sabado" style="display:none; width: auto; padding: 6px 10px; font-size: 1rem; background: #4caf50; margin-top:0; box-shadow: 0 2px 4px rgba(0,0,0,0.3);" onclick="volverASabadoProximo()" title="Ir al Sábado Actual"><i class="fas fa-undo"></i></button>
+                <button style="width: auto; padding: 6px 10px; font-size: 1rem; background: #555; margin-top:0; box-shadow: 0 2px 4px rgba(0,0,0,0.3);" onclick="document.getElementById('modalLeyenda').style.display='block'" title="Ver Leyenda"><i class="fas fa-info-circle"></i></button>
+            </div>
+        </div>
         <div id="lista-tarjetas"></div>
     </div>
 
@@ -147,7 +160,7 @@
             <i class="fas fa-user-shield" style="font-size: 3rem; color: var(--primary);"></i>
             <h2>Acceso Administrador</h2>
             <div class="form-group">
-                <input type="password" id="input-clave" placeholder=" ">
+                <input type="password" inputmode="numeric" pattern="[0-9]*" id="input-clave" placeholder=" ">
             </div>
             <button onclick="verificarLogin()"><i class="fas fa-key"></i> INGRESAR</button>
             <button class="btn-secondary" onclick="showScreen('mainScreen')">Cancelar</button>
@@ -262,6 +275,16 @@
         </div>
     </div>
 
+    <div id="modalInfoPredicacion" class="modal-overlay" style="z-index: 999;">
+        <div class="modal-content" style="text-align: center;">
+            <i class="fas fa-info-circle" style="font-size: 3rem; color: #17a2b8; margin-bottom: 10px;"></i>
+            <h3 style="margin-top:0;">Detalles de Asignación</h3>
+            <p style="font-size: 1rem; color: #333; margin-bottom: 5px;"><b>Asignado por:</b> <span id="info-asignado-por"></span></p>
+            <p style="font-size: 1rem; color: #333; margin-bottom: 20px;"><b>Fecha y Hora:</b> <span id="info-fecha-hora"></span></p>
+            <button class="btn-secondary" onclick="document.getElementById('modalInfoPredicacion').style.display='none'">CERRAR</button>
+        </div>
+    </div>
+
     <script>
 
 /*
@@ -295,6 +318,7 @@
         let datosLocales = { predicaciones: [], iglesias: [], predicadores_lista: [], usuarios: [] };
         let usuarioActual = null;
         let proximoSabado = "";
+        let sabadoVisto = ""; // Guarda la fecha del sábado por el que estamos navegando
         let guardandoEnNube = false;
 
         // Auditoría eliminada de raíz
@@ -314,6 +338,7 @@
             const mes = String(sabado.getMonth() + 1).padStart(2, '0');
             const dia = String(sabado.getDate()).padStart(2, '0');
             proximoSabado = `${año}-${mes}-${dia}`;
+            if (!sabadoVisto) sabadoVisto = proximoSabado; // Solo se iguala al inicio
             actualizarBarraInfo();
         }
 
@@ -328,12 +353,13 @@
             if(screenId === 'configScreen') renderConfigLists();
             if(screenId === 'calendarScreen') renderCalendarioMensual();
             if(screenId === 'auditScreen') renderAuditoria();
+            if(screenId === 'loginScreen') setTimeout(() => document.getElementById('input-clave').focus(), 100);
         }
 
         function actualizarBarraInfo() {
             const userText = (typeof usuarioActual !== 'undefined' && usuarioActual && usuarioActual.nombre) ? usuarioActual.nombre : "Invitado";
             const barraInfo = document.getElementById('info-bar');
-            if (barraInfo) barraInfo.innerText = `Sábado: ${proximoSabado} | Usuario: ${userText}`;
+            if (barraInfo) barraInfo.innerText = `Sábado: ${proximoSabado} | ${userText}`;
         }
 
         // Login Inteligente de Administradores
@@ -524,9 +550,27 @@
             const contenedor = document.getElementById('lista-tarjetas');
             contenedor.innerHTML = "";
             
+            const tituloSabado = document.getElementById('titulo-sabado-principal');
+            const btnRegresar = document.getElementById('btn-regresar-sabado');
+            if (tituloSabado && btnRegresar) {
+                if (sabadoVisto === proximoSabado) {
+                    tituloSabado.innerHTML = `<i class="fas fa-clock"></i> Próximo Sábado`;
+                    btnRegresar.style.display = 'none';
+                } else {
+                    const partesFecha = sabadoVisto.split('-');
+                    const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+                    const dia = parseInt(partesFecha[2], 10);
+                    const mes = meses[parseInt(partesFecha[1], 10) - 1];
+                    const año = partesFecha[0];
+                    
+                    tituloSabado.innerHTML = `<i class="fas fa-calendar-alt"></i> Sábado ${dia} de ${mes} de ${año}`;
+                    btnRegresar.style.display = 'inline-block';
+                }
+            }
+
             // Iterar sobre la lista de iglesias para mantener siempre el ORDEN ORIGINAL
             datosLocales.iglesias.forEach(ig => {
-                const asignacion = datosLocales.predicaciones.find(p => p.fecha === proximoSabado && p.iglesia === ig.nombre);
+                const asignacion = datosLocales.predicaciones.find(p => p.fecha === sabadoVisto && p.iglesia === ig.nombre);
                 
                 if (asignacion) {
                     const col = ig.color || '#2196F3';
@@ -535,21 +579,90 @@
                     
                     const predData = datosLocales.predicadores_lista.find(x => x.nombre === asignacion.predicador);
                     
+                    let permisoEditar = false;
+                    let permisoEliminar = false;
+                    if (usuarioActual) {
+                        if (usuarioActual.rol === 'super_admin') {
+                            permisoEditar = true;
+                            permisoEliminar = true; // Súper admin sí puede eliminar desde el inicio
+                        } else if (asignacion.asignadoPor === usuarioActual.nombre) {
+                            permisoEditar = true; // Creador puede editar
+                            permisoEliminar = false; // "Solo yo puedo eliminar desde alli... solo en esa parte principal"
+                        }
+                    }
+
+                    let btnInfo = `<i class="fas fa-info-circle" style="color:#17a2b8; cursor:pointer; margin-right:15px; font-size:1.1rem;" onclick="mostrarInfoPredicacion('${asignacion.asignadoPor || 'Desconocido'}', '${asignacion.timestamp || 'Fecha desconocida'}')"></i>`;
+                    let botonesEdicion = `<div style="float: right; margin-top: -2px;">${btnInfo}`;
+                    
+                    if (permisoEditar) {
+                        botonesEdicion += `<i class="fas fa-edit" style="color:var(--primary); cursor:pointer; margin-right:${permisoEliminar ? '15px' : '0'}; font-size:1.1rem;" onclick="abrirFormularioPredicacionConDatos('${ig.nombre}', '${sabadoVisto}', '${asignacion.predicador}')"></i>`;
+                    }
+                    if (permisoEliminar) {
+                        botonesEdicion += `<i class="fas fa-trash-alt" style="color:#cc0000; cursor:pointer; font-size:1.1rem;" onclick="eliminarPredicacion('${sabadoVisto}', '${ig.nombre}')"></i>`;
+                    }
+                    botonesEdicion += `</div>`;
+
                     let recuadroPredicador = predData ? `<div class="tag-predicador color-${predData.tipo}">${asignacion.predicador}</div>` : `<div class="card-predicador">${asignacion.predicador}</div>`;
-
-
 
                     contenedor.innerHTML += `
                         <div class="card" style="background-color: ${bgColor}; border-left-color: ${col};">
-                            <div class="card-iglesia"><i class="fas ${ico}" style="color:${col}; margin-right:5px;"></i>${ig.nombre}</div>
-                            <div>${recuadroPredicador}</div>
-                        </div>
-                    `;
-                }
-            });
-        }
+                            <div class="card-iglesia">
+                                <i class="fas ${ico}" style="color:${col}; margin-right:5px;"></i>${ig.nombre}
+                                ${botonesEdicion}
+                            </div>
+                           <div>${recuadroPredicador}</div>
+                    </div>
+                `;
+            }
+        });
+    }
 
-        // Llenar Listas Desplegables <select> dinámicamente
+    function cambiarSemana(direccion) {
+        let fechaActual = new Date(sabadoVisto + "T12:00:00");
+        fechaActual.setDate(fechaActual.getDate() + (direccion * 7));
+        const año = fechaActual.getFullYear();
+        const mes = String(fechaActual.getMonth() + 1).padStart(2, '0');
+        const dia = String(fechaActual.getDate()).padStart(2, '0');
+        sabadoVisto = `${año}-${mes}-${dia}`;
+        renderCards();
+    }
+
+    function volverASabadoProximo() {
+        sabadoVisto = proximoSabado;
+        renderCards();
+    }
+
+    let touchStartX = 0;
+    let isTwoFingers = false;
+    let swipeProcessed = false;
+
+    document.addEventListener('touchstart', e => {
+        // Verifica si se tocaron 2 dedos estando en la pantalla principal
+        if (e.touches.length === 2 && document.getElementById('mainScreen').classList.contains('active')) {
+            isTwoFingers = true;
+            swipeProcessed = false;
+            touchStartX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        } else {
+            isTwoFingers = false;
+        }
+    }, {passive: true});
+
+    document.addEventListener('touchmove', e => {
+        if (isTwoFingers && !swipeProcessed && e.touches.length === 2 && document.getElementById('mainScreen').classList.contains('active')) {
+            let currentX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+            let diffX = touchStartX - currentX;
+            
+            if (diffX > 50) { 
+                cambiarSemana(1); // Deslizó a la izquierda: Próximos sábados
+                swipeProcessed = true;
+            } else if (diffX < -50) { 
+                cambiarSemana(-1); // Deslizó a la derecha: Sábados anteriores
+                swipeProcessed = true;
+            }
+        }
+    }, {passive: true});
+
+    // Llenar Listas Desplegables <select> dinámicamente
         function abrirFormularioPredicacion(fechaPre = null, iglesiaPre = null, predicadorPre = null) {
             const selIglesia = document.getElementById('select-iglesia');
             const selPredicador = document.getElementById('select-predicador');
@@ -918,28 +1031,39 @@
             datosLocales.iglesias.forEach(ig => {
                 const asignacion = datosLocales.predicaciones.find(p => p.fecha === fechaSeleccionada && p.iglesia === ig.nombre);
                 
-                // Restricción de Roles: Permiso para tocar esta tarjeta
+                let puedeAsignar = false;
                 let permisoEditar = false;
+                let permisoEliminar = false;
+                
                 if (usuarioActual) {
                     if (usuarioActual.rol === 'super_admin') {
+                        puedeAsignar = true;
                         permisoEditar = true;
-                    } else if (asignacion) {
-                        // Admin local solo puede quitar un predicador si es de SU iglesia
-                        const pData = datosLocales.predicadores_lista.find(x => x.nombre === asignacion.predicador);
-                        if (pData && pData.tipo !== 'pastor_distrito' && usuarioActual.iglesias && usuarioActual.iglesias.includes(pData.iglesia)) permisoEditar = true;
+                        permisoEliminar = true;
                     } else {
-                        // Admin local puede ASIGNAR porque el espacio está vacío
-                        permisoEditar = true;
+                        // Admin local puede asignar si tiene permiso en esa iglesia
+                        if (usuarioActual.iglesias && usuarioActual.iglesias.includes(ig.nombre)) puedeAsignar = true;
+                        
+                        // Admin local SOLO puede editar/eliminar en el calendario si ÉL MISMO la creó
+                        if (asignacion && asignacion.asignadoPor === usuarioActual.nombre) {
+                            permisoEditar = true;
+                            permisoEliminar = true;
+                        }
                     }
                 }
 
-                let cursorStyle = permisoEditar ? "cursor: pointer;" : "";
+                let cursorStyle = (asignacion && permisoEditar) || (!asignacion && puedeAsignar) ? "cursor: pointer;" : "";
                 let col = ig.color || '#2196F3';
                 let ico = ig.icono || 'fa-church';
                 
                 if (asignacion) {
                      let clickAction = permisoEditar ? `onclick="abrirFormularioPredicacionConDatos('${ig.nombre}', '${fechaSeleccionada}', '${asignacion.predicador}')"` : "";
-                     let iconEdit = permisoEditar ? `<span style="float:right; color:#666; font-size:0.9rem;"><i class="fas fa-edit"></i></span>` : "";
+                     
+                     let btnInfo = `<i class="fas fa-info-circle" style="color:#17a2b8; cursor:pointer; margin-right:12px; font-size:1.1rem;" onclick="event.stopPropagation(); mostrarInfoPredicacion('${asignacion.asignadoPor || 'Desconocido'}', '${asignacion.timestamp || 'Fecha desconocida'}')"></i>`;
+                     let btnEdit = permisoEditar ? `<i class="fas fa-edit" style="color:#666; font-size:1.1rem; margin-right:12px;"></i>` : "";
+                     let btnDel = permisoEliminar ? `<i class="fas fa-trash-alt" style="color:#cc0000; font-size:1.1rem;" onclick="event.stopPropagation(); eliminarPredicacion('${fechaSeleccionada}', '${ig.nombre}')"></i>` : "";
+                     
+                     let botonesEdicion = `<span style="float:right; display:flex; margin-top:-2px;">${btnInfo}${btnEdit}${btnDel}</span>`;
                      
                      let bgColor = col + "33"; 
                      
@@ -947,14 +1071,13 @@
                      let recuadroPredicador = pData ? `<div class="tag-predicador color-${pData.tipo}">${asignacion.predicador}</div>` : `<div class="card-predicador">${asignacion.predicador}</div>`;
                      
                      contDetalle.innerHTML += `
-
                         <div class="card" style="background-color: ${bgColor}; border-left-color: ${col}; ${cursorStyle}" ${clickAction}>
-                            <div class="card-iglesia"><i class="fas ${ico}" style="color:${col}; margin-right:5px;"></i>${ig.nombre} ${iconEdit}</div>
+                            <div class="card-iglesia"><i class="fas ${ico}" style="color:${col}; margin-right:5px;"></i>${ig.nombre} ${botonesEdicion}</div>
                             <div style="margin-top: 4px;">${recuadroPredicador}</div>
                         </div>`;
                 } else {
-                    let clickAction = permisoEditar ? `onclick="abrirFormularioPredicacionConDatos('${ig.nombre}', '${fechaSeleccionada}', '')"` : "";
-                    let iconAsignar = permisoEditar ? `<span style="color:var(--primary); font-size:0.9rem; float:right; font-weight:bold;"><i class="fas fa-plus-circle"></i> Asignar</span>` : "";
+                    let clickAction = puedeAsignar ? `onclick="abrirFormularioPredicacionConDatos('${ig.nombre}', '${fechaSeleccionada}', '')"` : "";
+                    let iconAsignar = puedeAsignar ? `<span style="color:var(--primary); font-size:0.9rem; float:right; font-weight:bold;"><i class="fas fa-plus-circle"></i> Asignar</span>` : "";
                     
                     contDetalle.innerHTML += `
                         <div class="card" style="background-color: #f8f9fa; border-left-color: #ccc; ${cursorStyle}" ${clickAction}>
@@ -980,12 +1103,17 @@
             const fechaSeleccionada = document.getElementById('select-fecha').value;
             
             if(iglesia && predicador && fechaSeleccionada) {
+                let nomAdmin = usuarioActual ? usuarioActual.nombre : 'Desconocido';
+                let fechaHora = new Date().toLocaleString('es-MX');
+
                 // Prevenir duplicados (si la iglesia ya tiene predicador ese día, se actualiza)
                 let existe = datosLocales.predicaciones.findIndex(p => p.fecha === fechaSeleccionada && p.iglesia === iglesia);
                 if (existe !== -1) {
                      datosLocales.predicaciones[existe].predicador = predicador;
+                     datosLocales.predicaciones[existe].asignadoPor = nomAdmin;
+                     datosLocales.predicaciones[existe].timestamp = fechaHora;
                 } else {
-                     datosLocales.predicaciones.push({ iglesia: iglesia, predicador: predicador, fecha: fechaSeleccionada });
+                     datosLocales.predicaciones.push({ iglesia: iglesia, predicador: predicador, fecha: fechaSeleccionada, asignadoPor: nomAdmin, timestamp: fechaHora });
                 }
                 
                 if (typeof registrarAuditoria === 'function') {
@@ -995,6 +1123,25 @@
                 saveGist();
                 document.getElementById('modalPredicacion').style.display = 'none';
                 renderCards();
+            }
+        }
+
+        function mostrarInfoPredicacion(quien, cuando) {
+            document.getElementById('info-asignado-por').innerText = quien;
+            document.getElementById('info-fecha-hora').innerText = cuando;
+            document.getElementById('modalInfoPredicacion').style.display = 'block';
+        }
+
+        function eliminarPredicacion(fechaAEliminar, iglesiaAEliminar) {
+            if (confirm(`¿Estás seguro de ELIMINAR la predicación de ${iglesiaAEliminar}?`)) {
+                let indice = datosLocales.predicaciones.findIndex(p => p.fecha === fechaAEliminar && p.iglesia === iglesiaAEliminar);
+                if (indice !== -1) {
+                    datosLocales.predicaciones.splice(indice, 1);
+                    saveGist();
+                    document.getElementById('modalDiaCalendario').style.display = 'none';
+                    renderCards();
+                    renderCalendarioMensual();
+                }
             }
         }
 
@@ -1095,14 +1242,14 @@
                 }
             }, 300);
             
-            // Sincronización REAL a Gist y Local cada 1 segundo
+            // Sincronización REAL a Gist y Local cada 30 segundos
             setInterval(() => {
                 if (!usuarioActual) {
-                    fetchGist(); // Usuarios sin clave descargan cada segundo
+                    fetchGist(); // Usuarios sin clave descargan cada 30 segundos
                 }
-                // Si es administrador, NO descarga cada segundo para que no choque con sus modificaciones.
+                // Si es administrador, NO descarga cada 30 segundos para que no choque con sus modificaciones.
                 // Sus cambios se suben a la nube automáticamente al presionar los botones de "Guardar" o "Eliminar".
-            }, 1000);
+            }, 30000);
 
 
 
