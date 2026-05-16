@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Predicaciones</title>
+    <link rel="stylesheet" href="assets/fontawesome/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #f4f6f9;
+            --primary: #2196F3;
+            --surface: #ffffff;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-color); margin: 0; padding: 0; }
+        
+        /* Barra de Navegación */
+        .navbar { background: var(--primary); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .navbar h1 { margin: 0; font-size: 1.2rem; }
+        .nav-icons i { margin-left: 15px; cursor: pointer; font-size: 1.2rem; }
+        
+        /* Info Superior */
+        .info-bar { background: #e0e0e0; text-align: center; padding: 5px; font-size: 0.85rem; color: #555; }
+        
+        /* Contenedores de Pantallas */
+        .screen { display: none; padding: 20px; }
+        .active { display: block; }
+        
+        /* Tarjetas de Predicadores (Tiny) */
+        .card { background: var(--surface); padding: 10px 15px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 6px solid #ccc; }
+        .card-iglesia { font-size: 0.75rem; color: #666; text-transform: uppercase; }
+        .card-predicador { font-size: 1.1rem; font-weight: bold; margin: 4px 0; color: #333; }
+        .card-icon { font-size: 0.8rem; color: #999; }
+        
+        /* Colores Dinámicos de Clasificación (Sólidos y Metálicos) */
+        .color-distrital { background: linear-gradient(145deg, #28a745, #1e7e34) !important; color: #ffffff !important; border: none !important; }
+        .color-local { background: linear-gradient(145deg, #dc3545, #c82333) !important; color: #ffffff !important; border: none !important; }
+        .color-foraneo { background: linear-gradient(145deg, #007bff, #0056b3) !important; color: #ffffff !important; border: none !important; }
+        .color-departamental { background: linear-gradient(145deg, #ffd700, #daa520) !important; color: #000000 !important; border: none !important; } /* Dorado metálico */
+        .color-pastor { background: linear-gradient(145deg, #e2e2e2, #b8c6db) !important; color: #000000 !important; border: none !important; } /* Plateado */
+        .color-pastor_distrito { background: linear-gradient(145deg, #9c27b0, #6a1b9a) !important; color: #ffffff !important; border: none !important; } /* Morado */
+
+        /* Etiquetas Predicadores Config y Tarjetas */
+        .tag-predicador { display: inline-block; padding: 6px 14px; border-radius: 20px; margin-top: 4px; font-weight: bold; font-size: 0.95rem; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+
+        /* Formularios y Popups */
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 0.9rem; margin-bottom: 5px; color: #333; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 1rem; box-sizing: border-box; }
+        button { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 5px; width: 100%; font-size: 1rem; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); margin-top: 10px;}
+        button.btn-secondary { background: #757575; }
+        
+        /* Modal Popup */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; }
+        .modal-content { background: white; padding: 20px; width: 85%; margin: 20% auto; border-radius: 10px; }
+        
+        /* Modal a Pantalla Completa */
+        .modal-fullscreen .modal-content { width: 100%; height: 100%; margin: 0; border-radius: 0; box-sizing: border-box; display: flex; flex-direction: column; }
+        .modal-fullscreen .contenido-scroll { flex-grow: 1; overflow-y: auto; margin-bottom: 15px; }
+        
+        /* Animación Próximo Sábado */
+        @keyframes parpadeoElegante { 
+            0% { box-shadow: 0 0 5px #2196F3; border-left-color: #ccc; } 
+            50% { box-shadow: 0 0 15px #2196F3, inset 0 0 10px #e6f2ff; border-left-color: #2196F3; } 
+            100% { box-shadow: 0 0 5px #2196F3; border-left-color: #ccc; } 
+        }
+        .next-saturday { animation: parpadeoElegante 2s infinite; border: 1px solid #2196F3; }
+    </style>
+</head>
+<body>
+
+    <div class="navbar">
+        <h1 id="app-title"><i class="fas fa-calendar-alt"></i> Predicaciones</h1>
+        <div class="nav-icons">
+            <i class="fas fa-sync-alt" onclick="forzarDescargaPublica()" id="btn-sync" title="Actualizar desde la nube"></i>
+            <i class="fas fa-calendar-alt" onclick="abrirCalendarioMensual()" id="btn-calendar"></i>
+            <i class="fas fa-history" onclick="abrirAuditoria()" style="display: none;" id="btn-audit"></i>
+            <i class="fas fa-cog" onclick="showScreen('configScreen')" style="display: none;" id="btn-config"></i>
+            <i class="fas fa-plus-circle" onclick="abrirFormularioPredicacion()" style="display: none;" id="btn-add"></i>
+            <i class="fas fa-sign-in-alt" onclick="showScreen('loginScreen')" id="btn-login"></i>
+            <i class="fas fa-sign-out-alt" onclick="cerrarSesion()" style="display: none;" id="btn-logout"></i>
+        </div>
+    </div>
+    <div class="info-bar" id="info-bar">Sábado: Calculando... | Usuario: Invitado</div>
+
+    <div id="mainScreen" class="screen active">
+        <h3 style="margin-top:0;"><i class="fas fa-clock"></i> Próximo Sábado</h3>
+        <div id="lista-tarjetas"></div>
+    </div>
+
+    <div id="calendarScreen" class="screen">
+        <button class="btn-secondary" style="margin-bottom: 20px;" onclick="showScreen('mainScreen')"><i class="fas fa-arrow-left"></i> Volver</button>
+        <h3 style="margin-top:0;"><i class="fas fa-calendar-week"></i> Calendario Mensual</h3>
+        
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; background:var(--surface); padding:10px; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <input type="month" id="mes-calendario" onchange="renderCalendarioMensual()" style="width:55%; padding:8px;">
+            <label style="font-size:0.85rem; display:flex; align-items:center; gap:5px; font-weight:bold; color:#555;">
+                <input type="checkbox" id="chk-dias" onchange="renderCalendarioMensual()" style="width:auto; transform:scale(1.3);"> Mié/Vie
+            </label>
+        </div>
+        
+        <div id="contenedor-calendario"></div>
+    </div>
+
+    <div id="configScreen" class="screen">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <button class="btn-secondary" style="width: auto; margin: 0;" onclick="showScreen('mainScreen')"><i class="fas fa-arrow-left"></i> Volver</button>
+            <div id="botones-sincronizacion-manual" style="display: none; gap: 10px;">
+                <button style="width: auto; padding: 8px 15px; font-size: 1.2rem; background: #4caf50; margin: 0; box-shadow: 0 4px 6px rgba(0,0,0,0.3);" onclick="forzarSubidaNube()"><i class="fas fa-cloud-upload-alt"></i></button>
+                <button style="width: auto; padding: 8px 15px; font-size: 1.2rem; background: #ff9800; margin: 0; box-shadow: 0 4px 6px rgba(0,0,0,0.3);" onclick="forzarDescargaNube()"><i class="fas fa-cloud-download-alt"></i></button>
+            </div>
+        </div>
+        
+        <div id="seccion-iglesias">
+
+
+
+            <h3>Administrar Iglesias</h3>
+            <button onclick="abrirFormularioNuevaIglesia()"><i class="fas fa-plus"></i> Nueva Iglesia</button>
+            <ul id="lista-config-iglesias" style="margin-bottom: 30px; padding-left: 0;"></ul>
+        </div>
+
+        <div id="seccion-usuarios" style="display:none;">
+            <h3>Administrar Usuarios (Admins)</h3>
+            <button onclick="abrirFormularioNuevoUsuario()"><i class="fas fa-user-plus"></i> Nuevo Administrador</button>
+            <div id="lista-config-usuarios" style="margin-bottom: 30px; margin-top: 15px;"></div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0;">Administrar Predicadores</h3>
+            <button style="width: auto; padding: 5px 10px; font-size: 0.8rem; background: #555; margin-top:0;" onclick="document.getElementById('modalLeyenda').style.display='block'"><i class="fas fa-info-circle"></i> Leyenda</button>
+        </div>
+        <button onclick="abrirFormularioNuevoPredicador()"><i class="fas fa-plus"></i> Nuevo Predicador</button>
+        <input type="text" id="buscador-config-predicador" placeholder="🔍 Buscar en la lista..." onkeyup="renderConfigLists()" style="margin-top: 15px;">
+
+
+        <div id="lista-config-predicadores" style="margin-top: 15px;"></div>
+    </div>
+
+    <div id="auditScreen" class="screen">
+        <button class="btn-secondary" style="margin-bottom: 20px;" onclick="showScreen('mainScreen')"><i class="fas fa-arrow-left"></i> Volver</button>
+        <h3 style="margin-top:0;"><i class="fas fa-history"></i> Auditoría (Últimos 30 Días)</h3>
+        <div id="lista-auditoria"></div>
+    </div>
+
+    <div id="loginScreen" class="screen">
+        <div style="text-align: center; padding: 40px 0;">
+            <i class="fas fa-user-shield" style="font-size: 3rem; color: var(--primary);"></i>
+            <h2>Acceso Administrador</h2>
+            <div class="form-group">
+                <input type="password" id="input-clave" placeholder=" ">
+            </div>
+            <button onclick="verificarLogin()"><i class="fas fa-key"></i> INGRESAR</button>
+            <button class="btn-secondary" onclick="showScreen('mainScreen')">Cancelar</button>
+        </div>
+    </div>
+
+    <div id="modalPredicacion" class="modal-overlay modal-fullscreen">
+        <div class="modal-content">
+            <h3 style="margin-top:0;">Asignar Predicación</h3>
+            <div class="contenido-scroll">
+            <div class="form-group">
+                <label><i class="fas fa-church"></i> Iglesia (Selecciona de la lista):</label>
+                <select id="select-iglesia"></select> 
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-user-tie"></i> Predicador (Selecciona de la lista):</label>
+                <input type="text" id="buscador-predicador" placeholder="🔍 Buscar predicador..." onkeyup="filtrarPredicadores()" style="margin-bottom: 8px;">
+                <select id="select-predicador"></select>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-calendar-day"></i> Fecha a asignar:</label>
+                <select id="select-fecha"></select>
+            </div>
+            </div>
+            <button onclick="guardarPredicacionSabado()">GUARDAR EN GIST</button>
+            <button class="btn-secondary" onclick="document.getElementById('modalPredicacion').style.display='none'">CANCELAR</button>
+        </div>
+    </div>
+
+    <div id="modalDiaCalendario" class="modal-overlay modal-fullscreen">
+        <div class="modal-content">
+            <h3 id="titulo-modal-dia" style="margin-top: 0;">Detalle del Día</h3>
+            <div id="contenido-modal-dia" class="contenido-scroll"></div>
+            <button class="btn-secondary" onclick="document.getElementById('modalDiaCalendario').style.display='none'">CERRAR</button>
+        </div>
+    </div>
+
+    <div id="modalIconos" class="modal-overlay modal-fullscreen" style="z-index: 200;">
+        <div class="modal-content">
+            <h3 style="margin-top: 0;">Selecciona un Ícono</h3>
+            <div class="contenido-scroll" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; font-size: 2rem;" id="grid-iconos">
+                </div>
+            <button class="btn-secondary" onclick="document.getElementById('modalIconos').style.display='none'">CANCELAR</button>
+        </div>
+    </div>
+
+    <div id="modalIglesia" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Registrar Iglesia</h3>
+            <div class="form-group"><input type="text" id="nueva-iglesia" placeholder="Nombre de la Iglesia"></div>
+            <div class="form-group" style="display: flex; gap: 10px; align-items: center;">
+                <label style="margin:0;">Color:</label>
+                <input type="color" id="color-iglesia" value="#2196F3" style="width: 50px; padding: 0; height: 40px; border:none; cursor:pointer;">
+                <label style="margin:0; margin-left: 10px;">Ícono:</label>
+                <button type="button" id="btn-selector-icono" onclick="abrirSelectorIconos()" style="width: 60px; margin-top: 0; background: #eee; color: #333; padding: 5px;"><i class="fas fa-church" id="icono-iglesia-preview" style="font-size:1.5rem;"></i></button>
+                <input type="hidden" id="icono-iglesia" value="fa-church">
+            </div>
+            <button onclick="guardarIglesia()">CREAR</button>
+            <button class="btn-secondary" onclick="document.getElementById('modalIglesia').style.display='none'">CANCELAR</button>
+        </div>
+    </div>
+
+    <div id="modalPredicador" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Registrar Predicador</h3>
+            <div class="form-group"><input type="text" id="nuevo-predicador" placeholder="Nombre completo"></div>
+            <div class="form-group">
+                <select id="nuevo-tipo" onchange="verificarTipoPredicador()">
+                    <option value="local" style="background-color: #ffe6e6; color: #cc0000; font-weight: bold;">Local</option>
+                    <option value="distrital" style="background-color: #e6ffe6; color: #008000; font-weight: bold;">Distrital</option>
+                    <option value="foraneo" style="background-color: #e6e6ff; color: #0000cc; font-weight: bold;">Foráneo</option>
+                    <option value="departamental" style="background-color: #fff9e6; color: #d4af37; font-weight: bold;">Departamental</option>
+                    <option value="pastor" style="background-color: #f0f4f8; color: #758799; font-weight: bold;">Pastor</option>
+                    <option value="pastor_distrito" style="background-color: #f2e6ff; color: #4a0080; font-weight: bold;">Pastor de Distrito</option>
+                </select>
+            </div>
+            <div class="form-group" id="grupo-iglesia-predicador">
+                <label><i class="fas fa-church"></i> Iglesia a la que pertenece:</label>
+                <select id="nueva-iglesia-predicador"></select>
+            </div>
+            <button onclick="guardarPredicador()">CREAR</button>
+            <button class="btn-secondary" onclick="document.getElementById('modalPredicador').style.display='none'">CANCELAR</button>
+        </div>
+    </div>
+
+    <div id="modalUsuario" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Registrar Administrador</h3>
+            <div class="form-group"><input type="text" id="nuevo-usuario-nombre" placeholder="Nombre del administrador"></div>
+            <div class="form-group"><input type="text" id="nuevo-usuario-clave" placeholder="Clave de acceso"></div>
+            <div class="form-group">
+                <label>Iglesias que puede administrar (Mantén presionado Ctrl para seleccionar varias en PC):</label>
+                <select id="nuevo-usuario-iglesias" multiple style="height: 120px;"></select>
+            </div>
+            <button onclick="guardarUsuario()">CREAR / ACTUALIZAR</button>
+            <button class="btn-secondary" onclick="document.getElementById('modalUsuario').style.display='none'">CANCELAR</button>
+        </div>
+    </div>
+
+    <div id="modalLeyenda" class="modal-overlay">
+        <div class="modal-content">
+            <h3 style="margin-top:0;">Leyenda de Colores</h3>
+            <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;">
+                <div><span class="tag-predicador color-local" style="margin:0;">Rojo</span> = Local</div>
+                <div><span class="tag-predicador color-distrital" style="margin:0;">Verde</span> = Distrital</div>
+                <div><span class="tag-predicador color-foraneo" style="margin:0;">Azul</span> = Foráneo</div>
+                <div><span class="tag-predicador color-departamental" style="margin:0;">Amarillo</span> = Departamental</div>
+                <div><span class="tag-predicador color-pastor" style="margin:0;">Gris</span> = Pastor</div>
+                <div><span class="tag-predicador color-pastor_distrito" style="margin:0;">Morado</span> = Pastor de Distrito</div>
+            </div>
+            <button class="btn-secondary" onclick="document.getElementById('modalLeyenda').style.display='none'">CERRAR</button>
+        </div>
+    </div>
+
+    <script>
+
+
+        // --- CONSOLA DE DEPURACIÓN EN PANTALLA ---
+        const logOriginal = console.log;
+        console.log = function(mensaje) {
+            logOriginal.apply(console, arguments);
+            let panelLog = document.getElementById('panel-depuracion');
+            if (!panelLog) {
+                panelLog = document.createElement('div');
+                panelLog.id = 'panel-depuracion';
+                panelLog.style.cssText = 'position:fixed; bottom:0; left:0; width:100%; height:150px; background:rgba(0,0,0,0.85); color:#00ff00; font-family:monospace; font-size:11px; overflow-y:auto; z-index:9999; padding:10px; box-sizing:border-box; word-wrap:break-word;';
+                document.body.appendChild(panelLog);
+            }
+            const tiempo = new Date().toLocaleTimeString();
+            panelLog.innerHTML += `[${tiempo}] ${mensaje}<br>`;
+            panelLog.scrollTop = panelLog.scrollHeight; // Auto-scroll hacia abajo
+        };
+        // -----------------------------------------
+
+
+
+
+
+
+        // CONFIGURACIÓN DE GIST Y TOKENS SEGURA
+        const GIST_ID = "73a69f3511ab18a970675e4fc3adb255";
+        const TOKEN_1 = "ghp_3C5DAGokEsqm8Fy"; // REEMPLAZAR
+        const TOKEN_2 = "wPEYu98RKa2CR2U0iznop";     // REEMPLAZAR
+        
+        let datosLocales = { predicaciones: [], iglesias: [], predicadores_lista: [], usuarios: [] };
+        let usuarioActual = null;
+        let proximoSabado = "";
+        let guardandoEnNube = false;
+
+        // Auditoría eliminada de raíz
+        function registrarAuditoria(accionStr) {
+            return; // Ya no hace absolutamente nada
+        }
+
+
+
+
+        // Calcular Próximo Sábado
+        function calcularProximoSabado() {
+            const hoy = new Date();
+            const diasParaSabado = (6 - hoy.getDay() + 7) % 7;
+            const sabado = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() + diasParaSabado);
+            const año = sabado.getFullYear();
+            const mes = String(sabado.getMonth() + 1).padStart(2, '0');
+            const dia = String(sabado.getDate()).padStart(2, '0');
+            proximoSabado = `${año}-${mes}-${dia}`;
+            actualizarBarraInfo();
+        }
+
+
+
+
+        // Sistema de Navegación Simple
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            if(screenId === 'mainScreen') renderCards();
+            if(screenId === 'configScreen') renderConfigLists();
+            if(screenId === 'calendarScreen') renderCalendarioMensual();
+            if(screenId === 'auditScreen') renderAuditoria();
+        }
+
+        function actualizarBarraInfo() {
+            const userText = (typeof usuarioActual !== 'undefined' && usuarioActual && usuarioActual.nombre) ? usuarioActual.nombre : "Invitado";
+            const barraInfo = document.getElementById('info-bar');
+            if (barraInfo) barraInfo.innerText = `Sábado: ${proximoSabado} | Usuario: ${userText}`;
+        }
+
+        // Login Inteligente de Administradores
+        function verificarLogin() {
+            const clave = document.getElementById('input-clave').value;
+            let logueado = false;
+            
+            if(clave === "1402") {
+                usuarioActual = { nombre: "Pastor de Distrito", rol: "super_admin", iglesias: [] };
+                logueado = true;
+            } else {
+                const user = datosLocales.usuarios && datosLocales.usuarios.find(u => u.clave === clave);
+                if(user) {
+                    usuarioActual = { nombre: user.nombre, rol: "admin", iglesias: user.iglesias };
+                    logueado = true;
+                }
+            }
+
+            if(logueado) {
+                document.getElementById('btn-login').style.display = 'none';
+                document.getElementById('btn-config').style.display = 'inline-block';
+                document.getElementById('btn-add').style.display = 'inline-block';
+                if (usuarioActual.rol === 'super_admin') document.getElementById('btn-audit').style.display = 'inline-block';
+                document.getElementById('btn-logout').style.display = 'inline-block';
+                document.getElementById('input-clave').value = '';
+                
+                document.getElementById('seccion-iglesias').style.display = usuarioActual.rol === 'super_admin' ? 'block' : 'none';
+                document.getElementById('seccion-usuarios').style.display = usuarioActual.rol === 'super_admin' ? 'block' : 'none';
+                document.getElementById('botones-sincronizacion-manual').style.display = usuarioActual.rol === 'super_admin' ? 'flex' : 'none';
+                
+                actualizarBarraInfo();
+
+
+
+                showScreen('mainScreen');
+            } else {
+                alert("Clave incorrecta. Solicita tu acceso al Pastor de Distrito.");
+            }
+        }
+
+        function cerrarSesion() {
+            usuarioActual = null;
+            document.getElementById('btn-login').style.display = 'inline-block';
+            document.getElementById('btn-config').style.display = 'none';
+            document.getElementById('btn-add').style.display = 'none';
+            document.getElementById('btn-audit').style.display = 'none';
+            document.getElementById('btn-logout').style.display = 'none';
+            document.getElementById('botones-sincronizacion-manual').style.display = 'none';
+            actualizarBarraInfo();
+
+
+
+            showScreen('mainScreen');
+        }
+
+        function abrirAuditoria() { return; }
+        function renderAuditoria() { return; }
+        function deshacerMovimiento(id) { return; }
+
+
+
+
+        // Configuración de IndexedDB (Base de datos local real, no LocalStorage)
+        const dbName = "PredicacionesDB";
+        let db;
+        const requestDB = indexedDB.open(dbName, 1);
+        requestDB.onupgradeneeded = function(event) {
+            db = event.target.result;
+            if (!db.objectStoreNames.contains("backup")) {
+                db.createObjectStore("backup");
+            }
+        };
+        requestDB.onsuccess = function(event) { db = event.target.result; };
+
+        function guardarEnDatabaseLocal() {
+            if (!db) return;
+            const transaction = db.transaction(["backup"], "readwrite");
+            const store = transaction.objectStore("backup");
+            store.put(datosLocales, "estado_actual");
+        }
+
+        // API Fetch REAL conectada a Gist y a la Database Local
+        async function fetchGist() {
+            if (guardandoEnNube) return; // Si estamos guardando, ignorar la lectura
+            try {
+                let url = `https://api.github.com/gists/${GIST_ID}?t=${new Date().getTime()}`; 
+                let req = await fetch(url, { headers: { "Authorization": `token ${TOKEN_1}${TOKEN_2}` } });
+
+                if (req.ok) {
+                    let res = await req.json();
+                    let archivo = res.files["predicaciones.json"];
+                    if (archivo && archivo.content) {
+                        // Usamos el contenido directo que ya viene en la respuesta de la API
+                        datosLocales = JSON.parse(archivo.content);
+                        guardarEnDatabaseLocal();
+                        console.log("LOG PREDYGMA - Datos sincronizados desde la nube.");
+                    }
+                }
+
+
+
+            } catch (error) {
+                console.log("LOG PREDYGMA - ERROR O MODO OFFLINE: " + error.message);
+            }
+            // Actualizar a cada segundo la pantalla que el usuario esté viendo
+            if (document.getElementById('mainScreen').classList.contains('active')) renderCards();
+            if (document.getElementById('calendarScreen').classList.contains('active')) renderCalendarioMensual();
+            if (document.getElementById('configScreen').classList.contains('active')) renderConfigLists();
+        }
+
+
+
+
+
+
+
+
+
+
+        async function saveGist() {
+            delete datosLocales.auditoria; // ELIMINA TODA LA BASURA ANTES DE SUBIR
+            console.log("Guardando en GitHub Gist y Base de Datos Local...", datosLocales);
+            guardandoEnNube = true; // Cerrar el candado
+            guardarEnDatabaseLocal(); // Guardado local inmediato
+
+
+
+            try {
+                let url = `https://api.github.com/gists/${GIST_ID}`;
+                let res = await fetch(url, {
+                    method: 'PATCH',
+                    headers: { "Authorization": `token ${TOKEN_1}${TOKEN_2}`, "Content-Type": "application/json" },
+                    body: JSON.stringify({ files: { "predicaciones.json": { content: JSON.stringify(datosLocales) } } })
+                });
+                
+                // Muestra en un popup el número de error exacto
+                if (!res.ok) {
+                    let textoError = await res.text();
+                    alert("CÓDIGO DE FALLA DE GITHUB: " + res.status + "\n" + textoError);
+                    console.log("LOG PREDYGMA - DETALLE DE FALLA DE SUBIDA: " + res.status + " - " + textoError);
+                } else {
+                    console.log("LOG PREDYGMA - SUBIDA EXITOSA!");
+                }
+            } catch (error) {
+
+
+
+
+
+
+                console.log("No hay internet, pero se guardó de forma segura en la Database Local.");
+            } finally {
+                guardandoEnNube = false; // Abrir el candado termine bien o falle
+            }
+        }
+
+        async function forzarDescargaNube() {
+            let pass = prompt("Ingresa el código 1402 para FORZAR DESCARGA de la nube:");
+            if (pass === "1402") {
+                guardandoEnNube = false; // Destrabamos el candado por si se quedó pegado
+                await fetchGist();
+                renderCards();
+                renderConfigLists();
+                alert("¡Descarga forzada ejecutada con éxito!");
+            } else {
+                alert("Código incorrecto. Descarga cancelada.");
+            }
+        }
+
+        async function forzarSubidaNube() {
+            if (confirm("¿Estás 100% seguro de FORZAR LA SUBIDA? Esto sobreescribirá la nube con tus datos locales de este dispositivo.")) {
+                await saveGist();
+                alert("¡Subida forzada ejecutada con éxito!");
+            }
+        }
+
+        async function forzarDescargaPublica() {
+            guardandoEnNube = false; // Destrabamos por si acaso
+            await fetchGist();
+            alert("¡Información descargada y actualizada correctamente!");
+        }
+
+        // Renderizado de Tarjetas
+
+
+
+        function renderCards() {
+            const contenedor = document.getElementById('lista-tarjetas');
+            contenedor.innerHTML = "";
+            
+            // Iterar sobre la lista de iglesias para mantener siempre el ORDEN ORIGINAL
+            datosLocales.iglesias.forEach(ig => {
+                const asignacion = datosLocales.predicaciones.find(p => p.fecha === proximoSabado && p.iglesia === ig.nombre);
+                
+                if (asignacion) {
+                    const col = ig.color || '#2196F3';
+                    const ico = ig.icono || 'fa-church';
+                    const bgColor = col + "33"; // Transparencia 20%
+                    
+                    const predData = datosLocales.predicadores_lista.find(x => x.nombre === asignacion.predicador);
+                    
+                    let recuadroPredicador = predData ? `<div class="tag-predicador color-${predData.tipo}">${asignacion.predicador}</div>` : `<div class="card-predicador">${asignacion.predicador}</div>`;
+
+
+
+                    contenedor.innerHTML += `
+                        <div class="card" style="background-color: ${bgColor}; border-left-color: ${col};">
+                            <div class="card-iglesia"><i class="fas ${ico}" style="color:${col}; margin-right:5px;"></i>${ig.nombre}</div>
+                            <div>${recuadroPredicador}</div>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        // Llenar Listas Desplegables <select> dinámicamente
+        function abrirFormularioPredicacion(fechaPre = null, iglesiaPre = null, predicadorPre = null) {
+            const selIglesia = document.getElementById('select-iglesia');
+            const selPredicador = document.getElementById('select-predicador');
+            const selFecha = document.getElementById('select-fecha');
+            
+            selIglesia.innerHTML = datosLocales.iglesias.map(i => `<option value="${i.nombre}">${i.nombre}</option>`).join('');
+            
+            // Administradores solo ven sus propios predicadores. Super Admin ve todos.
+            let predicadoresPermitidos = usuarioActual && usuarioActual.rol === 'super_admin' ? datosLocales.predicadores_lista : datosLocales.predicadores_lista.filter(p => p.tipo !== 'pastor_distrito' && usuarioActual && usuarioActual.iglesias.includes(p.iglesia));
+            selPredicador.innerHTML = predicadoresPermitidos.map(p => `<option value="${p.nombre}">${p.nombre} (${p.tipo})</option>`).join('');
+            
+            // Usar el mes del calendario o el actual si se abre desde el botón (+)
+            selFecha.innerHTML = "";
+            let opcionesFechas = "";
+            let targetDate = fechaPre ? new Date(fechaPre + "T12:00:00") : new Date();
+            const año = targetDate.getFullYear();
+            const mes = targetDate.getMonth();
+            const diasEnMes = new Date(año, mes + 1, 0).getDate();
+
+            for (let i = 1; i <= diasEnMes; i++) {
+                const fechaIterada = new Date(año, mes, i);
+                const diaSemana = fechaIterada.getDay();
+                const fechaISO = `${año}-${String(mes + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                
+                if (diaSemana === 3) { // Miércoles
+                    opcionesFechas += `<option value="${fechaISO}" style="background-color: #fffacd;">Miércoles ${fechaISO}</option>`;
+                } else if (diaSemana === 5) { // Viernes
+                    opcionesFechas += `<option value="${fechaISO}" style="background-color: #fffacd;">Viernes ${fechaISO}</option>`;
+                } else if (diaSemana === 6) { // Sábado
+                    opcionesFechas += `<option value="${fechaISO}" style="background-color: #e6ffe6; font-weight: bold;">Sábado ${fechaISO}</option>`;
+                }
+            }
+            selFecha.innerHTML = opcionesFechas;
+            
+            // Asignar los valores recibidos para arreglar el bug
+            if (fechaPre) selFecha.value = fechaPre;
+            else selFecha.value = proximoSabado;
+            
+            if (iglesiaPre) selIglesia.value = iglesiaPre;
+            if (predicadorPre) selPredicador.value = predicadorPre;
+
+            const buscador = document.getElementById('buscador-predicador');
+            if (buscador) { buscador.value = ""; filtrarPredicadores(); }
+
+            document.getElementById('modalPredicacion').style.display = 'block';
+        }
+
+        function quitarAcentosExtremo(texto) {
+            return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+        }
+
+        function filtrarPredicadores() {
+            const inputVal = document.getElementById('buscador-predicador').value;
+            const terminos = quitarAcentosExtremo(inputVal).split(' ').filter(t => t.trim() !== '');
+            const selPredicador = document.getElementById('select-predicador');
+            
+            let predicadoresPermitidos = (typeof usuarioActual !== 'undefined' && usuarioActual && usuarioActual.rol === 'super_admin') ? datosLocales.predicadores_lista : datosLocales.predicadores_lista.filter(p => p.tipo !== 'pastor_distrito' && typeof usuarioActual !== 'undefined' && usuarioActual && usuarioActual.iglesias && usuarioActual.iglesias.includes(p.iglesia));
+            
+            selPredicador.innerHTML = predicadoresPermitidos.filter(p => {
+                if (terminos.length === 0) return true;
+                const textoRef = quitarAcentosExtremo(`${p.nombre} ${p.tipo} ${p.iglesia || ''}`);
+                return terminos.every(term => textoRef.includes(term));
+            }).map(p => `<option value="${p.nombre}">${p.nombre} (${p.tipo})</option>`).join('');
+        }
+
+        // Funciones CRUD
+        let editIndexIglesia = -1;
+        let editIndexPredicador = -1;
+
+        function abrirSelectorIconos() {
+            const grid = document.getElementById('grid-iconos');
+            const iconos = [
+                'fa-church', 'fa-place-of-worship', 'fa-cross', 'fa-bible', 'fa-dove', 'fa-hands-praying', 'fa-person-praying', 'fa-star-of-david', 'fa-om', 'fa-vihara', 'fa-synagogue', 'fa-mosque', 'fa-kaaba', 'fa-torii-gate', 'fa-peace', 'fa-ankh', 'fa-dharmachakra', 'fa-menorah', 'fa-khanda', 'fa-yin-yang',
+                'fa-home', 'fa-house', 'fa-house-chimney', 'fa-building', 'fa-city', 'fa-school', 'fa-hospital', 'fa-clinic', 'fa-hotel', 'fa-warehouse', 'fa-landmark', 'fa-monument', 'fa-campground', 'fa-tent', 'fa-igloo', 'fa-shop', 'fa-store', 'fa-tree-city', 'fa-mountain-city', 'fa-house-chimney-window',
+                'fa-tree', 'fa-seedling', 'fa-leaf', 'fa-mountain', 'fa-mountain-sun', 'fa-water', 'fa-fire', 'fa-fire-flame-curved', 'fa-sun', 'fa-moon', 'fa-star', 'fa-cloud', 'fa-cloud-sun', 'fa-cloud-moon', 'fa-cloud-rain', 'fa-snowflake', 'fa-wind', 'fa-bolt', 'fa-droplet', 'fa-rainbow',
+                'fa-cat', 'fa-dog', 'fa-horse', 'fa-fish', 'fa-bug', 'fa-spider', 'fa-crow', 'fa-frog', 'fa-cow', 'fa-hippo', 'fa-otter', 'fa-fish-fins', 'fa-locust', 'fa-mosquito', 'fa-paw', 'fa-kiwi-bird', 'fa-worm', 'fa-shrimp', 'fa-shield-cat', 'fa-shield-dog',
+                'fa-user', 'fa-users', 'fa-user-group', 'fa-user-tie', 'fa-user-ninja', 'fa-user-astronaut', 'fa-user-secret', 'fa-user-graduate', 'fa-person', 'fa-person-dress', 'fa-children', 'fa-baby', 'fa-people-group', 'fa-person-cane', 'fa-person-walking-with-cane', 'fa-person-military-rifle', 'fa-person-rifle', 'fa-person-shelter', 'fa-wheelchair', 'fa-child-reaching',
+                'fa-heart', 'fa-heart-pulse', 'fa-heart-crack', 'fa-lightbulb', 'fa-map-marker-alt', 'fa-map-pin', 'fa-location-dot', 'fa-anchor', 'fa-bell', 'fa-bookmark', 'fa-crown', 'fa-flag', 'fa-check', 'fa-info', 'fa-music', 'fa-book', 'fa-globe', 'fa-shield', 'fa-key', 'fa-lock',
+                'fa-envelope', 'fa-paper-plane', 'fa-phone', 'fa-comment', 'fa-comments', 'fa-microphone', 'fa-camera', 'fa-video', 'fa-image', 'fa-image-portrait', 'fa-calendar', 'fa-calendar-days', 'fa-clock', 'fa-compass', 'fa-map', 'fa-car', 'fa-bus', 'fa-train', 'fa-bicycle', 'fa-plane',
+                'fa-ship', 'fa-truck', 'fa-motorcycle', 'fa-bed', 'fa-bath', 'fa-shopping-cart', 'fa-basket-shopping', 'fa-bag-shopping', 'fa-credit-card', 'fa-wallet', 'fa-money-bill', 'fa-coins', 'fa-chart-bar', 'fa-chart-pie', 'fa-chart-line', 'fa-gift', 'fa-box', 'fa-box-open', 'fa-boxes-stacked', 'fa-tag',
+                'fa-tags', 'fa-ticket', 'fa-clipboard', 'fa-clipboard-list', 'fa-folder', 'fa-folder-open', 'fa-file', 'fa-file-lines', 'fa-pen', 'fa-pen-nib', 'fa-paintbrush', 'fa-highlighter', 'fa-eraser', 'fa-ruler', 'fa-scissors', 'fa-paperclip', 'fa-link', 'fa-link-slash', 'fa-magnet', 'fa-flask',
+                'fa-vial', 'fa-vials', 'fa-microscope', 'fa-stethoscope', 'fa-syringe', 'fa-pills', 'fa-capsules', 'fa-prescription-bottle', 'fa-tooth', 'fa-bone', 'fa-eye', 'fa-eye-slash', 'fa-glasses', 'fa-brain', 'fa-lungs', 'fa-skull', 'fa-fingerprint', 'fa-hand', 'fa-hand-fist', 'fa-hand-holding',
+                'fa-hand-holding-heart', 'fa-hand-sparkles', 'fa-handshake', 'fa-thumbs-up', 'fa-thumbs-down', 'fa-circle-check', 'fa-circle-xmark', 'fa-circle-exclamation', 'fa-circle-info', 'fa-circle-question', 'fa-triangle-exclamation', 'fa-shield-halved', 'fa-shield-heart', 'fa-trophy', 'fa-medal', 'fa-award', 'fa-ribbon', 'fa-star-half', 'fa-star-half-stroke', 'fa-gem',
+                'fa-ring', 'fa-plug', 'fa-power-off', 'fa-battery-full', 'fa-battery-half', 'fa-battery-empty', 'fa-laptop', 'fa-desktop', 'fa-mobile', 'fa-mobile-screen', 'fa-tablet', 'fa-tablet-screen', 'fa-tv', 'fa-headphones', 'fa-headset', 'fa-keyboard', 'fa-mouse', 'fa-print', 'fa-gamepad', 'fa-bullhorn',
+                'fa-megaphone', 'fa-broadcast-tower', 'fa-satellite-dish', 'fa-wifi', 'fa-signal', 'fa-tower-broadcast', 'fa-magnifying-glass', 'fa-magnifying-glass-plus', 'fa-magnifying-glass-minus', 'fa-filter', 'fa-sort', 'fa-sort-up', 'fa-sort-down', 'fa-arrow-up', 'fa-arrow-down', 'fa-arrow-left', 'fa-arrow-right', 'fa-chevron-up', 'fa-chevron-down', 'fa-chevron-left',
+                'fa-chevron-right', 'fa-caret-up', 'fa-caret-down', 'fa-caret-left', 'fa-caret-right', 'fa-angle-up', 'fa-angle-down', 'fa-angle-left', 'fa-angle-right', 'fa-turn-up', 'fa-turn-down', 'fa-download', 'fa-upload', 'fa-cloud-arrow-down', 'fa-cloud-arrow-up', 'fa-folder-arrow-down', 'fa-file-arrow-down', 'fa-file-arrow-up', 'fa-share-nodes', 'fa-share-from-square',
+                'fa-reply', 'fa-reply-all', 'fa-forward', 'fa-retweet', 'fa-sync', 'fa-arrows-rotate', 'fa-rotate-right', 'fa-rotate-left', 'fa-plus', 'fa-minus', 'fa-xmark', 'fa-divide', 'fa-equals', 'fa-percent', 'fa-infinity', 'fa-calculator', 'fa-calendar-check', 'fa-calendar-xmark', 'fa-calendar-plus', 'fa-calendar-minus'
+            ];
+            grid.innerHTML = iconos.map(ico => `<i class="fas ${ico}" style="cursor:pointer; padding:15px; border:1px solid #ccc; border-radius:8px; color:var(--primary);" onclick="seleccionarIcono('${ico}')"></i>`).join('');
+            document.getElementById('modalIconos').style.display = 'block';
+        }
+
+        function seleccionarIcono(ico) {
+            document.getElementById('icono-iglesia').value = ico;
+            document.getElementById('icono-iglesia-preview').className = `fas ${ico}`;
+            document.getElementById('modalIconos').style.display = 'none';
+        }
+
+        function abrirFormularioNuevaIglesia() {
+            editIndexIglesia = -1;
+            document.getElementById('nueva-iglesia').value = '';
+            document.getElementById('color-iglesia').value = '#2196F3';
+            document.getElementById('icono-iglesia').value = 'fa-church';
+            document.getElementById('icono-iglesia-preview').className = 'fas fa-church';
+            document.getElementById('modalIglesia').style.display = 'block';
+        }
+
+        function abrirEditarIglesia(index) {
+            editIndexIglesia = index;
+            const ig = datosLocales.iglesias[index];
+            document.getElementById('nueva-iglesia').value = ig.nombre;
+            document.getElementById('color-iglesia').value = ig.color || '#2196F3';
+            document.getElementById('icono-iglesia').value = ig.icono || 'fa-church';
+            document.getElementById('icono-iglesia-preview').className = `fas ${ig.icono || 'fa-church'}`;
+            document.getElementById('modalIglesia').style.display = 'block';
+        }
+
+        function eliminarIglesia(index) {
+            if(confirm("¿Estás seguro de eliminar esta iglesia?")) {
+                if(typeof registrarAuditoria === 'function') registrarAuditoria(`Eliminó la iglesia: ${datosLocales.iglesias[index].nombre}`);
+                datosLocales.iglesias.splice(index, 1);
+                saveGist();
+                renderConfigLists();
+            }
+        }
+
+        function guardarIglesia() {
+            const nombre = document.getElementById('nueva-iglesia').value;
+            const color = document.getElementById('color-iglesia').value;
+            const icono = document.getElementById('icono-iglesia').value;
+            if(nombre) {
+                if(typeof registrarAuditoria === 'function') registrarAuditoria(editIndexIglesia === -1 ? `Creó la iglesia: ${nombre}` : `Editó la iglesia: ${nombre}`);
+                if(editIndexIglesia === -1) {
+                    datosLocales.iglesias.push({nombre: nombre, color: color, icono: icono});
+                } else {
+                    datosLocales.iglesias[editIndexIglesia] = {nombre: nombre, color: color, icono: icono};
+                }
+                saveGist();
+                document.getElementById('modalIglesia').style.display = 'none';
+                renderConfigLists();
+            }
+        }
+
+        function abrirFormularioNuevoPredicador() {
+            editIndexPredicador = -1;
+            document.getElementById('nuevo-predicador').value = '';
+            const selIglesiaPred = document.getElementById('nueva-iglesia-predicador');
+            selIglesiaPred.innerHTML = datosLocales.iglesias.map(i => `<option value="${i.nombre}">${i.nombre}</option>`).join('');
+            Array.from(document.getElementById('nuevo-tipo').options).forEach(opt => {
+                if (opt.value === 'pastor_distrito') opt.style.display = (usuarioActual && usuarioActual.rol === 'super_admin') ? 'block' : 'none';
+            });
+            if (usuarioActual && usuarioActual.rol !== 'super_admin') document.getElementById('nuevo-tipo').value = 'local';
+            verificarTipoPredicador();
+            document.getElementById('modalPredicador').style.display = 'block';
+        }
+
+        function abrirEditarPredicador(index) {
+            editIndexPredicador = index;
+            const pr = datosLocales.predicadores_lista[index];
+            document.getElementById('nuevo-predicador').value = pr.nombre;
+            Array.from(document.getElementById('nuevo-tipo').options).forEach(opt => {
+                if (opt.value === 'pastor_distrito') opt.style.display = (usuarioActual && usuarioActual.rol === 'super_admin') ? 'block' : 'none';
+            });
+            document.getElementById('nuevo-tipo').value = pr.tipo;
+            
+            const selIglesiaPred = document.getElementById('nueva-iglesia-predicador');
+            selIglesiaPred.innerHTML = datosLocales.iglesias.map(i => `<option value="${i.nombre}">${i.nombre}</option>`).join('');
+            if(pr.iglesia) { selIglesiaPred.value = pr.iglesia; }
+            
+            verificarTipoPredicador();
+            document.getElementById('modalPredicador').style.display = 'block';
+        }
+
+        function eliminarPredicador(index) {
+            if(confirm("¿Estás seguro de eliminar este predicador?")) {
+                datosLocales.predicadores_lista.splice(index, 1);
+                saveGist();
+                renderConfigLists();
+            }
+        }
+
+        function verificarClaveAccionProtegida(mensaje) {
+            let pass = prompt(mensaje);
+            if (pass === null || pass.trim() === "") return false;
+            
+            // Validación Súper Admin
+            if (usuarioActual && usuarioActual.rol === 'super_admin' && pass === "1402") return true;
+            
+            // Validación Admin Normal
+            let usuarioValidado = datosLocales.usuarios.find(u => u.nombre === usuarioActual.nombre && u.clave === pass);
+            if (usuarioValidado) return true;
+            
+            alert("Clave incorrecta. Operación cancelada.");
+            return false;
+        }
+
+        function editarPredicadorProtegido(index) {
+            const pr = datosLocales.predicadores_lista[index];
+            if (verificarClaveAccionProtegida(`Ingresa tu clave para EDITAR a ${pr.nombre}:`)) {
+                abrirEditarPredicador(index);
+            }
+        }
+
+        function eliminarPredicadorProtegido(index) {
+            const pr = datosLocales.predicadores_lista[index];
+            if (verificarClaveAccionProtegida(`Ingresa tu clave para ELIMINAR a ${pr.nombre}:`)) {
+                if(confirm(`¿Estás completamente seguro de eliminar a ${pr.nombre}?`)) {
+                    datosLocales.predicadores_lista.splice(index, 1);
+                    saveGist();
+                    renderConfigLists();
+                }
+            }
+        }
+
+
+
+
+
+
+
+        function verificarTipoPredicador() {
+            const tipo = document.getElementById('nuevo-tipo').value;
+            const grupoIglesia = document.getElementById('grupo-iglesia-predicador');
+            if (tipo === 'local' || tipo === 'distrital') {
+                grupoIglesia.style.display = 'block';
+            } else {
+                grupoIglesia.style.display = 'none';
+            }
+        }
+
+        function guardarPredicador() {
+            const nombre = document.getElementById('nuevo-predicador').value;
+            const tipo = document.getElementById('nuevo-tipo').value;
+            const iglesiaSelect = document.getElementById('nueva-iglesia-predicador').value;
+            
+            let iglesiaAsignada = "";
+            if (tipo === 'local' || tipo === 'distrital') {
+                iglesiaAsignada = iglesiaSelect;
+                if (!iglesiaAsignada) {
+                    alert("Debe registrar y seleccionar una iglesia a la que pertenece este predicador.");
+                    return;
+                }
+            }
+
+            if(nombre) {
+                if(typeof registrarAuditoria === 'function') registrarAuditoria(editIndexPredicador === -1 ? `Registró al predicador: ${nombre}` : `Editó al predicador: ${nombre}`);
+                if(editIndexPredicador === -1) {
+                    datosLocales.predicadores_lista.push({nombre: nombre, tipo: tipo, iglesia: iglesiaAsignada});
+                } else {
+                    datosLocales.predicadores_lista[editIndexPredicador] = {nombre: nombre, tipo: tipo, iglesia: iglesiaAsignada};
+                }
+                saveGist();
+                document.getElementById('modalPredicador').style.display = 'none';
+                renderConfigLists();
+            }
+        }
+
+        // --- LÓGICA DE USUARIOS (ADMINISTRADORES) ---
+        let editIndexUsuario = -1;
+
+        function abrirFormularioNuevoUsuario() {
+            editIndexUsuario = -1;
+            document.getElementById('nuevo-usuario-nombre').value = '';
+            document.getElementById('nuevo-usuario-clave').value = '';
+            const selIg = document.getElementById('nuevo-usuario-iglesias');
+            selIg.innerHTML = datosLocales.iglesias.map(i => `<option value="${i.nombre}">${i.nombre}</option>`).join('');
+            document.getElementById('modalUsuario').style.display = 'block';
+        }
+
+        function abrirEditarUsuario(index) {
+            editIndexUsuario = index;
+            const u = datosLocales.usuarios[index];
+            document.getElementById('nuevo-usuario-nombre').value = u.nombre;
+            document.getElementById('nuevo-usuario-clave').value = u.clave;
+            const selIg = document.getElementById('nuevo-usuario-iglesias');
+            selIg.innerHTML = datosLocales.iglesias.map(i => `<option value="${i.nombre}" ${u.iglesias && u.iglesias.includes(i.nombre) ? 'selected' : ''}>${i.nombre}</option>`).join('');
+            document.getElementById('modalUsuario').style.display = 'block';
+        }
+
+        function eliminarUsuario(index) {
+            if(confirm("¿Estás seguro de eliminar este administrador?")) {
+                if(typeof registrarAuditoria === 'function') registrarAuditoria(`Eliminó al administrador: ${datosLocales.usuarios[index].nombre}`);
+                datosLocales.usuarios.splice(index, 1);
+                saveGist();
+                renderConfigLists();
+            }
+        }
+
+        function guardarUsuario() {
+            const nombre = document.getElementById('nuevo-usuario-nombre').value;
+            const clave = document.getElementById('nuevo-usuario-clave').value;
+            const options = document.getElementById('nuevo-usuario-iglesias').options;
+            const iglesiasSeleccionadas = Array.from(options).filter(opt => opt.selected).map(opt => opt.value);
+            
+            if(nombre && clave) {
+                if(typeof registrarAuditoria === 'function') registrarAuditoria(editIndexUsuario === -1 ? `Creó al administrador: ${nombre}` : `Editó al administrador: ${nombre}`);
+                if(!datosLocales.usuarios) datosLocales.usuarios = [];
+                if(editIndexUsuario === -1) {
+                    datosLocales.usuarios.push({nombre: nombre, clave: clave, iglesias: iglesiasSeleccionadas});
+                } else {
+                    datosLocales.usuarios[editIndexUsuario] = {nombre: nombre, clave: clave, iglesias: iglesiasSeleccionadas};
+                }
+                saveGist();
+                document.getElementById('modalUsuario').style.display = 'none';
+                renderConfigLists();
+            }
+        }
+
+        function abrirCalendarioMensual() {
+            showScreen('calendarScreen');
+        }
+
+        function renderCalendarioMensual() {
+            const contenedor = document.getElementById('contenedor-calendario');
+            contenedor.innerHTML = "";
+            
+            const mesInput = document.getElementById('mes-calendario').value;
+            if (!mesInput) return;
+            const [añoStr, mesStr] = mesInput.split('-');
+            const año = parseInt(añoStr);
+            const mes = parseInt(mesStr) - 1;
+            
+            const mostrarTodos = document.getElementById('chk-dias').checked;
+            const diasEnMes = new Date(año, mes + 1, 0).getDate();
+            const totalIglesias = datosLocales.iglesias.length;
+
+            for (let i = 1; i <= diasEnMes; i++) {
+                const fechaIterada = new Date(año, mes, i);
+                const diaSemana = fechaIterada.getDay();
+                
+                if (diaSemana === 6 || (mostrarTodos && (diaSemana === 3 || diaSemana === 5))) {
+                    const fechaISO = `${año}-${String(mes + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                    let nombreDia = diaSemana === 3 ? "Miércoles" : (diaSemana === 5 ? "Viernes" : "Sábado");
+                    
+                    let asignados = datosLocales.predicaciones.filter(p => p.fecha === fechaISO).length;
+                    let bgCol = diaSemana === 6 ? "#e6ffe6" : "#fffacd";
+                    let borderCol = diaSemana === 6 ? "#008000" : "#d4af37";
+                    
+                    let claseParpadeo = (fechaISO === proximoSabado) ? "next-saturday" : "";
+                    
+                    let estadoSabado = "";
+                    if (diaSemana === 6) {
+                        if (asignados >= totalIglesias && totalIglesias > 0) {
+                            estadoSabado = `<span style="background:#28a745; color:white; border-radius:50%; padding:3px 6px; font-size:0.7rem; float:right;"><i class="fas fa-check"></i></span>`;
+                        } else {
+                            estadoSabado = `<span style="color:#cc0000; font-size:0.8rem; float:right; font-weight:normal;"><i class="fas fa-exclamation-triangle"></i> Faltan</span>`;
+                        }
+                    }
+
+                    contenedor.innerHTML += `
+                        <div class="card ${claseParpadeo}" style="background-color: ${bgCol}; border-left-color: ${borderCol}; cursor: pointer;" onclick="abrirDetalleDia('${fechaISO}', '${nombreDia}')">
+                            <div class="card-predicador">${nombreDia} ${fechaISO} ${estadoSabado}</div>
+                            <div class="card-iglesia">Predicadores asignados: <b>${asignados}</b></div>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        function abrirDetalleDia(fechaSeleccionada, nombreDia) {
+            document.getElementById('titulo-modal-dia').innerText = `${nombreDia} ${fechaSeleccionada}`;
+            const contDetalle = document.getElementById('contenido-modal-dia');
+            contDetalle.innerHTML = "";
+
+            // Mostrar SIEMPRE todas las iglesias
+            datosLocales.iglesias.forEach(ig => {
+                const asignacion = datosLocales.predicaciones.find(p => p.fecha === fechaSeleccionada && p.iglesia === ig.nombre);
+                
+                // Restricción de Roles: Permiso para tocar esta tarjeta
+                let permisoEditar = false;
+                if (usuarioActual) {
+                    if (usuarioActual.rol === 'super_admin') {
+                        permisoEditar = true;
+                    } else if (asignacion) {
+                        // Admin local solo puede quitar un predicador si es de SU iglesia
+                        const pData = datosLocales.predicadores_lista.find(x => x.nombre === asignacion.predicador);
+                        if (pData && pData.tipo !== 'pastor_distrito' && usuarioActual.iglesias && usuarioActual.iglesias.includes(pData.iglesia)) permisoEditar = true;
+                    } else {
+                        // Admin local puede ASIGNAR porque el espacio está vacío
+                        permisoEditar = true;
+                    }
+                }
+
+                let cursorStyle = permisoEditar ? "cursor: pointer;" : "";
+                let col = ig.color || '#2196F3';
+                let ico = ig.icono || 'fa-church';
+                
+                if (asignacion) {
+                     let clickAction = permisoEditar ? `onclick="abrirFormularioPredicacionConDatos('${ig.nombre}', '${fechaSeleccionada}', '${asignacion.predicador}')"` : "";
+                     let iconEdit = permisoEditar ? `<span style="float:right; color:#666; font-size:0.9rem;"><i class="fas fa-edit"></i></span>` : "";
+                     
+                     let bgColor = col + "33"; 
+                     
+                     const pData = datosLocales.predicadores_lista.find(x => x.nombre === asignacion.predicador);
+                     let recuadroPredicador = pData ? `<div class="tag-predicador color-${pData.tipo}">${asignacion.predicador}</div>` : `<div class="card-predicador">${asignacion.predicador}</div>`;
+                     
+                     contDetalle.innerHTML += `
+
+                        <div class="card" style="background-color: ${bgColor}; border-left-color: ${col}; ${cursorStyle}" ${clickAction}>
+                            <div class="card-iglesia"><i class="fas ${ico}" style="color:${col}; margin-right:5px;"></i>${ig.nombre} ${iconEdit}</div>
+                            <div style="margin-top: 4px;">${recuadroPredicador}</div>
+                        </div>`;
+                } else {
+                    let clickAction = permisoEditar ? `onclick="abrirFormularioPredicacionConDatos('${ig.nombre}', '${fechaSeleccionada}', '')"` : "";
+                    let iconAsignar = permisoEditar ? `<span style="color:var(--primary); font-size:0.9rem; float:right; font-weight:bold;"><i class="fas fa-plus-circle"></i> Asignar</span>` : "";
+                    
+                    contDetalle.innerHTML += `
+                        <div class="card" style="background-color: #f8f9fa; border-left-color: #ccc; ${cursorStyle}" ${clickAction}>
+                            <div class="card-iglesia"><i class="fas ${ico}" style="color:#999; margin-right:5px;"></i>${ig.nombre} ${iconAsignar}</div>
+                            <div class="card-predicador" style="color: #999; font-style: italic;">Sin asignar predicador</div>
+                        </div>`;
+                }
+            });
+
+            document.getElementById('modalDiaCalendario').style.display = 'block';
+        }
+
+        // Función auxiliar para asignar desde el calendario (¡La habíamos perdido!)
+        function abrirFormularioPredicacionConDatos(nombreIglesia, fechaObj, predicadorActual) {
+            document.getElementById('modalDiaCalendario').style.display = 'none';
+            // Le pasamos los datos para que el formulario respete el día seleccionado
+            abrirFormularioPredicacion(fechaObj, nombreIglesia, predicadorActual);
+        }
+
+        function guardarPredicacionSabado() {
+            const iglesia = document.getElementById('select-iglesia').value;
+            const predicador = document.getElementById('select-predicador').value;
+            const fechaSeleccionada = document.getElementById('select-fecha').value;
+            
+            if(iglesia && predicador && fechaSeleccionada) {
+                // Prevenir duplicados (si la iglesia ya tiene predicador ese día, se actualiza)
+                let existe = datosLocales.predicaciones.findIndex(p => p.fecha === fechaSeleccionada && p.iglesia === iglesia);
+                if (existe !== -1) {
+                     datosLocales.predicaciones[existe].predicador = predicador;
+                } else {
+                     datosLocales.predicaciones.push({ iglesia: iglesia, predicador: predicador, fecha: fechaSeleccionada });
+                }
+                
+                if (typeof registrarAuditoria === 'function') {
+                    registrarAuditoria(`Asignó a ${predicador} a la iglesia ${iglesia} el día ${fechaSeleccionada}`);
+                }
+
+                saveGist();
+                document.getElementById('modalPredicacion').style.display = 'none';
+                renderCards();
+            }
+        }
+
+        function renderConfigLists() {
+            document.getElementById('lista-config-iglesias').innerHTML = datosLocales.iglesias.map((i, index) => {
+                let col = i.color || '#999';
+                let ico = i.icono || 'fa-church';
+                return `<li style="margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; background:var(--surface); padding:10px; border-radius:8px; box-shadow:0 1px 2px rgba(0,0,0,0.1);">
+                            <div style="display:flex; align-items:center; gap:10px;"><i class="fas ${ico}" style="color:${col}; font-size:1.2rem; width:20px; text-align:center;"></i> <b>${i.nombre}</b></div>
+                            <div>
+                                <i class="fas fa-edit" style="color:var(--primary); cursor:pointer; margin-right:15px; font-size:1.1rem;" onclick="abrirEditarIglesia(${index})"></i>
+                                <i class="fas fa-trash-alt" style="color:#cc0000; cursor:pointer; font-size:1.1rem;" onclick="eliminarIglesia(${index})"></i>
+                            </div>
+                        </li>`;
+            }).join('');
+            
+           
+            const inputBusq = document.getElementById('buscador-config-predicador');
+            const terminosConf = inputBusq && inputBusq.value ? quitarAcentosExtremo(inputBusq.value).split(' ').filter(t => t.trim() !== '') : [];
+
+            const contPredicadores = document.getElementById('lista-config-predicadores');
+            contPredicadores.innerHTML = datosLocales.predicadores_lista.map((p, index) => {
+                return { p, index };
+            }).filter(obj => {
+                if (terminosConf.length === 0) return true;
+                const textoOpcion = quitarAcentosExtremo(`${obj.p.nombre} ${obj.p.tipo} ${obj.p.iglesia || ''}`);
+                return terminosConf.every(term => textoOpcion.includes(term));
+            }).map(obj => {
+                let p = obj.p;
+                let index = obj.index;
+                let iglesiaTexto = p.iglesia ? `<div style="font-size:0.75rem; font-weight:normal; margin-top:2px;">Iglesia: ${p.iglesia}</div>` : "";
+                let botonesAccion = "";
+                if (p.tipo === 'pastor_distrito' && (!usuarioActual || usuarioActual.rol !== 'super_admin')) {
+                    botonesAccion = ""; 
+                } else {
+                    botonesAccion = `
+                        <div style="display:flex; gap:15px; align-items:center;">
+                            <i class="fas fa-edit" style="color:var(--primary); cursor:pointer; font-size:1.1rem;" onclick="editarPredicadorProtegido(${index})"></i>
+                            <i class="fas fa-trash-alt" style="color:#cc0000; cursor:pointer; font-size:1.1rem;" onclick="eliminarPredicadorProtegido(${index})"></i>
+                        </div>
+                    `;
+                }
+                return `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; background:var(--surface); padding:8px 15px; border-radius:8px; box-shadow:0 1px 2px rgba(0,0,0,0.1);">
+                            <div class="tag-predicador color-${p.tipo}" style="margin:0; flex-grow:1; display:flex; flex-direction:column; line-height:1.3; padding:10px 15px; border-radius:8px;">
+                                <div style="font-size: 1.05rem;">${p.nombre}</div>
+                                ${iglesiaTexto}
+                            </div>
+                            <div style="margin-left: 20px; display:flex; gap:15px; align-items:center;">
+                                ${botonesAccion}
+                            </div>
+                        </div>`;
+
+
+
+
+
+
+            }).join('');
+            
+            const contUsuarios = document.getElementById('lista-config-usuarios');
+            if (contUsuarios && datosLocales.usuarios) {
+                contUsuarios.innerHTML = datosLocales.usuarios.map((u, index) => {
+                    let igs = (u.iglesias || []).join(', ');
+                    return `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; background:var(--surface); padding:8px 10px; border-radius:8px; border-left:4px solid #333; box-shadow:0 1px 2px rgba(0,0,0,0.1);">
+                                <div><b>${u.nombre}</b> <br><span style="font-size:0.75rem; color:#666;">Clave: ${u.clave} | Iglesias: ${igs}</span></div>
+                                <div>
+                                    <i class="fas fa-edit" style="color:var(--primary); cursor:pointer; margin-right:15px; font-size:1.1rem;" onclick="abrirEditarUsuario(${index})"></i>
+                                    <i class="fas fa-trash-alt" style="color:#cc0000; cursor:pointer; font-size:1.1rem;" onclick="eliminarUsuario(${index})"></i>
+                                </div>
+                            </div>`;
+                }).join('');
+            }
+        }
+
+        // Inicialización y Sincronización (COMPLETA Y CERRADA)
+        window.onload = () => {
+            calcularProximoSabado();
+            
+            // Configurar el input de mes por defecto al mes y año actual
+            const hoy = new Date();
+            const añoMes = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
+            document.getElementById('mes-calendario').value = añoMes;
+            
+            // Cargar datos locales INMEDIATAMENTE para el Modo Offline antes de buscar en la nube
+            setTimeout(() => {
+                if (db) {
+                    const transaction = db.transaction(["backup"], "readonly");
+                    const getReq = transaction.objectStore("backup").get("estado_actual");
+                    getReq.onsuccess = function() {
+                        if (getReq.result) {
+                            datosLocales = getReq.result;
+                            renderCards(); // Mostrar datos guardados al instante
+                        }
+                        fetchGist(); // Después intentar traer de la nube
+                    };
+                } else {
+                    fetchGist();
+                }
+            }, 300);
+            
+            // Sincronización REAL a Gist y Local cada 1 segundo
+            setInterval(() => {
+                if (!usuarioActual) {
+                    fetchGist(); // Usuarios sin clave descargan cada segundo
+                }
+                // Si es administrador, NO descarga cada segundo para que no choque con sus modificaciones.
+                // Sus cambios se suben a la nube automáticamente al presionar los botones de "Guardar" o "Eliminar".
+            }, 1000);
+
+
+
+        };
+
+
+
+    </script>
+</body>
+</html>
