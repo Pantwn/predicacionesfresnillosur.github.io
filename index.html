@@ -382,7 +382,6 @@
                 document.getElementById('btn-login').style.display = 'none';
                 document.getElementById('btn-config').style.display = 'inline-block';
                 document.getElementById('btn-add').style.display = 'inline-block';
-                if (usuarioActual.rol === 'super_admin') document.getElementById('btn-audit').style.display = 'inline-block';
                 document.getElementById('btn-logout').style.display = 'inline-block';
                 document.getElementById('input-clave').value = '';
                 
@@ -405,7 +404,6 @@
             document.getElementById('btn-login').style.display = 'inline-block';
             document.getElementById('btn-config').style.display = 'none';
             document.getElementById('btn-add').style.display = 'none';
-            document.getElementById('btn-audit').style.display = 'none';
             document.getElementById('btn-logout').style.display = 'none';
             document.getElementById('botones-sincronizacion-manual').style.display = 'none';
             actualizarBarraInfo();
@@ -591,7 +589,7 @@
                         }
                     }
 
-                    let btnInfo = `<i class="fas fa-info-circle" style="color:#17a2b8; cursor:pointer; margin-right:15px; font-size:1.1rem;" onclick="mostrarInfoPredicacion('${asignacion.asignadoPor || 'Desconocido'}', '${asignacion.timestamp || 'Fecha desconocida'}')"></i>`;
+                    let btnInfo = usuarioActual ? `<i class="fas fa-info-circle" style="color:#17a2b8; cursor:pointer; margin-right:15px; font-size:1.1rem;" onclick="mostrarInfoPredicacion('${asignacion.asignadoPor || 'Desconocido'}', '${asignacion.timestamp || 'Fecha desconocida'}')"></i>` : "";
                     let botonesEdicion = `<div style="float: right; margin-top: -2px;">${btnInfo}`;
                     
                     if (permisoEditar) {
@@ -1059,7 +1057,7 @@
                 if (asignacion) {
                      let clickAction = permisoEditar ? `onclick="abrirFormularioPredicacionConDatos('${ig.nombre}', '${fechaSeleccionada}', '${asignacion.predicador}')"` : "";
                      
-                     let btnInfo = `<i class="fas fa-info-circle" style="color:#17a2b8; cursor:pointer; margin-right:12px; font-size:1.1rem;" onclick="event.stopPropagation(); mostrarInfoPredicacion('${asignacion.asignadoPor || 'Desconocido'}', '${asignacion.timestamp || 'Fecha desconocida'}')"></i>`;
+                     let btnInfo = usuarioActual ? `<i class="fas fa-info-circle" style="color:#17a2b8; cursor:pointer; margin-right:12px; font-size:1.1rem;" onclick="event.stopPropagation(); mostrarInfoPredicacion('${asignacion.asignadoPor || 'Desconocido'}', '${asignacion.timestamp || 'Fecha desconocida'}')"></i>` : "";
                      let btnEdit = permisoEditar ? `<i class="fas fa-edit" style="color:#666; font-size:1.1rem; margin-right:12px;"></i>` : "";
                      let btnDel = permisoEliminar ? `<i class="fas fa-trash-alt" style="color:#cc0000; font-size:1.1rem;" onclick="event.stopPropagation(); eliminarPredicacion('${fechaSeleccionada}', '${ig.nombre}')"></i>` : "";
                      
