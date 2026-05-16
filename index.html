@@ -140,7 +140,10 @@
 
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <h3 style="margin: 0;">Administrar Predicadores</h3>
-            <button style="width: auto; padding: 5px 10px; font-size: 0.8rem; background: #555; margin-top:0;" onclick="document.getElementById('modalLeyenda').style.display='block'"><i class="fas fa-info-circle"></i> Leyenda</button>
+            <div style="display: flex; gap: 5px;">
+                <button style="width: auto; padding: 5px 10px; font-size: 0.8rem; background: #e91e63; margin-top:0;" onclick="abrirSustituciones()"><i class="fas fa-exchange-alt"></i> Sustitutos</button>
+                <button style="width: auto; padding: 5px 10px; font-size: 0.8rem; background: #555; margin-top:0;" onclick="document.getElementById('modalLeyenda').style.display='block'"><i class="fas fa-info-circle"></i> Leyenda</button>
+            </div>
         </div>
         <button onclick="abrirFormularioNuevoPredicador()"><i class="fas fa-plus"></i> Nuevo Predicador</button>
         <input type="text" id="buscador-config-predicador" placeholder="🔍 Buscar en la lista..." onkeyup="renderConfigLists()" style="margin-top: 15px;">
@@ -285,6 +288,67 @@
         </div>
     </div>
 
+    <div id="modalEvaluacion" class="modal-overlay" style="z-index: 1000;">
+        <div class="modal-content">
+            <h3 style="margin-top:0;"><i class="fas fa-clipboard-check"></i> Evaluar Asistencia</h3>
+            <p id="eval-desc" style="font-size: 0.9rem; color: #555; margin-bottom:15px; font-weight:bold;"></p>
+            
+            <div id="eval-countdown-container" style="display:none; text-align:center; padding: 30px 10px; font-size:1.3rem; font-weight:bold; color:var(--primary); border: 2px dashed var(--primary); border-radius: 8px; margin-bottom: 15px;">
+            </div>
+
+            <div id="eval-form-container">
+                <div class="form-group">
+                    <label>¿Llegó a predicar?</label>
+                    <select id="eval-llego" onchange="toggleSustituto()">
+                        <option value="si">Sí, predicó sin problemas</option>
+                        <option value="no">No llegó / Faltó</option>
+                    </select>
+                </div>
+                <div class="form-group" id="grupo-sustituto" style="display:none;">
+                    <label>¿Quién predicó en su lugar?</label>
+                    <input type="text" id="eval-sustituto" placeholder="Nombre del sustituto">
+                </div>
+                <input type="hidden" id="eval-fecha">
+                <input type="hidden" id="eval-iglesia">
+                <button onclick="guardarEvaluacion()">GUARDAR EVALUACIÓN</button>
+            </div>
+            <button class="btn-secondary" onclick="cerrarEvaluacion()">CANCELAR</button>
+        </div>
+    </div>
+
+    <div id="modalSustituciones" class="modal-overlay modal-fullscreen" style="z-index: 1000;">
+        <div class="modal-content">
+            <h3 style="margin-top:0;"><i class="fas fa-exchange-alt"></i> Sustituciones</h3>
+            <div style="display:flex; gap:5px; margin-bottom: 10px; align-items: center;">
+                <input type="month" id="filtro-mes-sustituciones" onchange="renderSustitucionesModal()" style="padding: 4px 8px; font-size: 0.85rem; width: auto; flex-grow: 1; height: 32px; box-sizing: border-box;">
+                <button style="margin: 0; padding: 4px 10px; width: auto; font-size: 0.85rem; height: 32px; display: flex; align-items: center; gap: 5px;" onclick="document.getElementById('filtro-mes-sustituciones').value=''; renderSustitucionesModal()"><i class="fas fa-times"></i> Todos</button>
+            </div>
+            <div class="contenido-scroll" id="lista-sustituciones" style="background: #f9f9f9; padding: 10px; border-radius: 8px;">
+            </div>
+            <button class="btn-secondary" onclick="document.getElementById('modalSustituciones').style.display='none'">CERRAR</button>
+        </div>
+    </div>
+
+    <div id="modalHistorial" class="modal-overlay modal-fullscreen" style="z-index: 1000;">
+        <div class="modal-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+                <h3 style="margin:0; flex-grow:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" id="historial-titulo">Historial de Predicador</h3>
+                <i class="fas fa-search" id="btn-mostrar-buscador-historial" style="color:var(--primary); cursor:pointer; font-size:1.2rem; margin-left:10px; padding:5px;" onclick="toggleBuscadorHistorial(true)"></i>
+                <div id="caja-buscador-historial" style="display:none; position:relative; flex-grow:2;">
+                    <input type="text" id="input-buscador-historial" placeholder="Buscar (ej. faltó, bañon...)" onkeyup="renderHistorialModal()" onblur="toggleBuscadorHistorial(false)" style="padding:4px 25px 4px 10px; font-size:0.9rem; height:32px; width:100%; border:1px solid var(--primary); border-radius:15px; box-sizing:border-box;">
+                    <i class="fas fa-times-circle" style="position:absolute; right:8px; top:7px; color:#999; cursor:pointer; font-size:1.1rem;" onmousedown="limpiarBuscadorHistorial(event)"></i>
+                </div>
+            </div>
+            <div style="display:flex; gap:5px; margin-bottom: 10px; align-items: center;">
+                <input type="month" id="filtro-mes-historial" onchange="renderHistorialModal()" style="padding: 4px 8px; font-size: 0.85rem; width: auto; flex-grow: 1; height: 32px; box-sizing: border-box;">
+                <button style="margin: 0; padding: 4px 10px; width: auto; font-size: 0.85rem; height: 32px; display: flex; align-items: center; gap: 5px;" onclick="document.getElementById('filtro-mes-historial').value=''; renderHistorialModal()"><i class="fas fa-times"></i> Todos</button>
+            </div>
+            <div class="contenido-scroll" id="lista-historial" style="background: #f9f9f9; padding: 10px; border-radius: 8px;">
+            </div>
+            <button class="btn-secondary" onclick="document.getElementById('modalHistorial').style.display='none'">CERRAR</button>
+        </div>
+    </div>
+
     <script>
 
 /*
@@ -356,10 +420,17 @@
             if(screenId === 'loginScreen') setTimeout(() => document.getElementById('input-clave').focus(), 100);
         }
 
+        function formatearFechaVisual(fechaISO) {
+            if (!fechaISO || !fechaISO.includes('-')) return fechaISO;
+            const partes = fechaISO.split('-');
+            if (partes.length === 3) return `${partes[2]}-${partes[1]}-${partes[0]}`;
+            return fechaISO;
+        }
+
         function actualizarBarraInfo() {
             const userText = (typeof usuarioActual !== 'undefined' && usuarioActual && usuarioActual.nombre) ? usuarioActual.nombre : "Invitado";
             const barraInfo = document.getElementById('info-bar');
-            if (barraInfo) barraInfo.innerText = `Sábado: ${proximoSabado} | ${userText}`;
+            if (barraInfo) barraInfo.innerText = `Sábado: ${formatearFechaVisual(proximoSabado)} | ${userText}`;
         }
 
         // Login Inteligente de Administradores
@@ -590,7 +661,8 @@
                     }
 
                     let btnInfo = usuarioActual ? `<i class="fas fa-info-circle" style="color:#17a2b8; cursor:pointer; margin-right:15px; font-size:1.1rem;" onclick="mostrarInfoPredicacion('${asignacion.asignadoPor || 'Desconocido'}', '${asignacion.timestamp || 'Fecha desconocida'}')"></i>` : "";
-                    let botonesEdicion = `<div style="float: right; margin-top: -2px;">${btnInfo}`;
+                    let btnEvaluar = (usuarioActual && usuarioActual.rol === 'super_admin') ? `<i class="fas fa-clipboard-check" style="color:#28a745; cursor:pointer; margin-right:15px; font-size:1.1rem;" onclick="abrirEvaluacion('${sabadoVisto}', '${ig.nombre}', '${asignacion.predicador}', '${asignacion.llego || 'si'}', '${asignacion.sustituto || ''}')" title="Evaluar Asistencia"></i>` : "";
+                    let botonesEdicion = `<div style="float: right; margin-top: -2px;">${btnInfo}${btnEvaluar}`;
                     
                     if (permisoEditar) {
                         botonesEdicion += `<i class="fas fa-edit" style="color:var(--primary); cursor:pointer; margin-right:${permisoEliminar ? '15px' : '0'}; font-size:1.1rem;" onclick="abrirFormularioPredicacionConDatos('${ig.nombre}', '${sabadoVisto}', '${asignacion.predicador}')"></i>`;
@@ -601,6 +673,9 @@
                     botonesEdicion += `</div>`;
 
                     let recuadroPredicador = predData ? `<div class="tag-predicador color-${predData.tipo}">${asignacion.predicador}</div>` : `<div class="card-predicador">${asignacion.predicador}</div>`;
+                    if (asignacion.llego === 'no') {
+                        recuadroPredicador = `<div style="text-decoration: line-through; color: #999; font-size: 0.95rem;">${asignacion.predicador} (Faltó)</div><div class="card-predicador" style="color:#cc0000; font-size:0.9rem;"><i class="fas fa-user-shield"></i> Sustituto: ${asignacion.sustituto}</div>`;
+                    }
 
                     contenedor.innerHTML += `
                         <div class="card" style="background-color: ${bgColor}; border-left-color: ${col};">
@@ -685,12 +760,13 @@
                 const diaSemana = fechaIterada.getDay();
                 const fechaISO = `${año}-${String(mes + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
                 
+                let fechaDisplay = formatearFechaVisual(fechaISO);
                 if (diaSemana === 3) { // Miércoles
-                    opcionesFechas += `<option value="${fechaISO}" style="background-color: #fffacd;">Miércoles ${fechaISO}</option>`;
+                    opcionesFechas += `<option value="${fechaISO}" style="background-color: #fffacd;">Miércoles ${fechaDisplay}</option>`;
                 } else if (diaSemana === 5) { // Viernes
-                    opcionesFechas += `<option value="${fechaISO}" style="background-color: #fffacd;">Viernes ${fechaISO}</option>`;
+                    opcionesFechas += `<option value="${fechaISO}" style="background-color: #fffacd;">Viernes ${fechaDisplay}</option>`;
                 } else if (diaSemana === 6) { // Sábado
-                    opcionesFechas += `<option value="${fechaISO}" style="background-color: #e6ffe6; font-weight: bold;">Sábado ${fechaISO}</option>`;
+                    opcionesFechas += `<option value="${fechaISO}" style="background-color: #e6ffe6; font-weight: bold;">Sábado ${fechaDisplay}</option>`;
                 }
             }
             selFecha.innerHTML = opcionesFechas;
@@ -1010,9 +1086,10 @@
                         }
                     }
 
+                    let fechaFormateada = formatearFechaVisual(fechaISO);
                     contenedor.innerHTML += `
                         <div class="card ${claseParpadeo}" style="background-color: ${bgCol}; border-left-color: ${borderCol}; cursor: pointer;" onclick="abrirDetalleDia('${fechaISO}', '${nombreDia}')">
-                            <div class="card-predicador">${nombreDia} ${fechaISO} ${estadoSabado}</div>
+                            <div class="card-predicador">${nombreDia} ${fechaFormateada} ${estadoSabado}</div>
                             <div class="card-iglesia">Predicadores asignados: <b>${asignados}</b></div>
                         </div>
                     `;
@@ -1021,7 +1098,7 @@
         }
 
         function abrirDetalleDia(fechaSeleccionada, nombreDia) {
-            document.getElementById('titulo-modal-dia').innerText = `${nombreDia} ${fechaSeleccionada}`;
+            document.getElementById('titulo-modal-dia').innerText = `${nombreDia} ${formatearFechaVisual(fechaSeleccionada)}`;
             const contDetalle = document.getElementById('contenido-modal-dia');
             contDetalle.innerHTML = "";
 
@@ -1058,15 +1135,19 @@
                      let clickAction = permisoEditar ? `onclick="abrirFormularioPredicacionConDatos('${ig.nombre}', '${fechaSeleccionada}', '${asignacion.predicador}')"` : "";
                      
                      let btnInfo = usuarioActual ? `<i class="fas fa-info-circle" style="color:#17a2b8; cursor:pointer; margin-right:12px; font-size:1.1rem;" onclick="event.stopPropagation(); mostrarInfoPredicacion('${asignacion.asignadoPor || 'Desconocido'}', '${asignacion.timestamp || 'Fecha desconocida'}')"></i>` : "";
+                     let btnEvaluar = (usuarioActual && usuarioActual.rol === 'super_admin') ? `<i class="fas fa-clipboard-check" style="color:#28a745; cursor:pointer; margin-right:12px; font-size:1.1rem;" onclick="event.stopPropagation(); abrirEvaluacion('${fechaSeleccionada}', '${ig.nombre}', '${asignacion.predicador}', '${asignacion.llego || 'si'}', '${asignacion.sustituto || ''}')" title="Evaluar Asistencia"></i>` : "";
                      let btnEdit = permisoEditar ? `<i class="fas fa-edit" style="color:#666; font-size:1.1rem; margin-right:12px;"></i>` : "";
                      let btnDel = permisoEliminar ? `<i class="fas fa-trash-alt" style="color:#cc0000; font-size:1.1rem;" onclick="event.stopPropagation(); eliminarPredicacion('${fechaSeleccionada}', '${ig.nombre}')"></i>` : "";
                      
-                     let botonesEdicion = `<span style="float:right; display:flex; margin-top:-2px;">${btnInfo}${btnEdit}${btnDel}</span>`;
+                     let botonesEdicion = `<span style="float:right; display:flex; margin-top:-2px;">${btnInfo}${btnEvaluar}${btnEdit}${btnDel}</span>`;
                      
                      let bgColor = col + "33"; 
                      
                      const pData = datosLocales.predicadores_lista.find(x => x.nombre === asignacion.predicador);
                      let recuadroPredicador = pData ? `<div class="tag-predicador color-${pData.tipo}">${asignacion.predicador}</div>` : `<div class="card-predicador">${asignacion.predicador}</div>`;
+                     if (asignacion.llego === 'no') {
+                         recuadroPredicador = `<div style="text-decoration: line-through; color: #999; font-size: 0.95rem;">${asignacion.predicador} (Faltó)</div><div class="card-predicador" style="color:#cc0000; font-size:0.9rem;"><i class="fas fa-user-shield"></i> Sustituto: ${asignacion.sustituto}</div>`;
+                     }
                      
                      contDetalle.innerHTML += `
                         <div class="card" style="background-color: ${bgColor}; border-left-color: ${col}; ${cursorStyle}" ${clickAction}>
@@ -1172,11 +1253,14 @@
                 let index = obj.index;
                 let iglesiaTexto = p.iglesia ? `<div style="font-size:0.75rem; font-weight:normal; margin-top:2px;">Iglesia: ${p.iglesia}</div>` : "";
                 let botonesAccion = "";
+                let btnHistorial = `<i class="fas fa-chart-bar" style="color:#17a2b8; cursor:pointer; font-size:1.1rem;" onclick="abrirHistorial('${p.nombre}')" title="Ver Historial y Ranking"></i>`;
+                
                 if (p.tipo === 'pastor_distrito' && (!usuarioActual || usuarioActual.rol !== 'super_admin')) {
-                    botonesAccion = ""; 
+                    botonesAccion = `<div style="display:flex; gap:15px; align-items:center;">${btnHistorial}</div>`; 
                 } else {
                     botonesAccion = `
                         <div style="display:flex; gap:15px; align-items:center;">
+                            ${btnHistorial}
                             <i class="fas fa-edit" style="color:var(--primary); cursor:pointer; font-size:1.1rem;" onclick="editarPredicadorProtegido(${index})"></i>
                             <i class="fas fa-trash-alt" style="color:#cc0000; cursor:pointer; font-size:1.1rem;" onclick="eliminarPredicadorProtegido(${index})"></i>
                         </div>
@@ -1212,6 +1296,244 @@
                             </div>`;
                 }).join('');
             }
+        }
+
+        function toggleSustituto() {
+            const llego = document.getElementById('eval-llego').value;
+            document.getElementById('grupo-sustituto').style.display = (llego === 'no') ? 'block' : 'none';
+        }
+
+        let evalInterval;
+        function abrirEvaluacion(fecha, iglesia, predicador, llego, sustituto) {
+            document.getElementById('eval-desc').innerText = `Evaluando a: ${predicador} en ${iglesia} el día ${formatearFechaVisual(fecha)}`;
+            document.getElementById('eval-fecha').value = fecha;
+            document.getElementById('eval-iglesia').value = iglesia;
+            document.getElementById('eval-llego').value = llego || 'si';
+            document.getElementById('eval-sustituto').value = sustituto || '';
+            toggleSustituto();
+            
+            clearInterval(evalInterval);
+            // La hora límite es a las 12:30 PM de ese día
+            const targetDate = new Date(fecha + "T12:30:00");
+            
+            function actualizarCuenta() {
+                const now = new Date();
+                const diff = targetDate - now;
+                
+                if (diff <= 0) {
+                    document.getElementById('eval-countdown-container').style.display = 'none';
+                    document.getElementById('eval-form-container').style.display = 'block';
+                    clearInterval(evalInterval);
+                } else {
+                    document.getElementById('eval-form-container').style.display = 'none';
+                    document.getElementById('eval-countdown-container').style.display = 'block';
+                    
+                    let d = targetDate.getDate() - now.getDate();
+                    let m = targetDate.getMonth() - now.getMonth() + (12 * (targetDate.getFullYear() - now.getFullYear()));
+                    
+                    if (d < 0) {
+                        m--;
+                        const prevMonth = new Date(targetDate.getFullYear(), targetDate.getMonth(), 0);
+                        d += prevMonth.getDate();
+                    }
+                    
+                    let textoFalta = "Faltan: ";
+                    if (m > 0) textoFalta += m + (m === 1 ? " mes " : " meses ");
+                    if (d > 0 || m === 0) textoFalta += d + (d === 1 ? " dias" : " dias");
+                    
+                    // Si falta menos de 1 día y meses es 0
+                    if (m === 0 && d === 0) {
+                        textoFalta = "Faltan unas horas (Abre a las 12:30 PM)";
+                    }
+                    
+                    document.getElementById('eval-countdown-container').innerText = textoFalta;
+                }
+            }
+            actualizarCuenta();
+            evalInterval = setInterval(actualizarCuenta, 10000); // Revisar cada 10 segundos
+            
+            document.getElementById('modalEvaluacion').style.display = 'block';
+        }
+
+        function cerrarEvaluacion() {
+            clearInterval(evalInterval);
+            document.getElementById('modalEvaluacion').style.display = 'none';
+        }
+
+        function guardarEvaluacion() {
+            const fecha = document.getElementById('eval-fecha').value;
+            const iglesia = document.getElementById('eval-iglesia').value;
+            const llego = document.getElementById('eval-llego').value;
+            const sustituto = document.getElementById('eval-sustituto').value;
+            
+            let indice = datosLocales.predicaciones.findIndex(p => p.fecha === fecha && p.iglesia === iglesia);
+            if (indice !== -1) {
+                datosLocales.predicaciones[indice].llego = llego;
+                if (llego === 'no') {
+                    datosLocales.predicaciones[indice].sustituto = sustituto;
+                } else {
+                    delete datosLocales.predicaciones[indice].sustituto; // Limpiar si lo regresan a "Sí llegó"
+                }
+                saveGist();
+                cerrarEvaluacion();
+                renderCards();
+                if (document.getElementById('modalDiaCalendario').style.display === 'block') {
+                    abrirDetalleDia(fecha, "Sábado");
+                }
+            }
+        }
+
+        function toggleBuscadorHistorial(mostrar) {
+            if (mostrar) {
+                document.getElementById('historial-titulo').style.display = 'none';
+                document.getElementById('btn-mostrar-buscador-historial').style.display = 'none';
+                document.getElementById('caja-buscador-historial').style.display = 'block';
+                document.getElementById('input-buscador-historial').focus();
+            } else {
+                document.getElementById('historial-titulo').style.display = 'block';
+                document.getElementById('caja-buscador-historial').style.display = 'none';
+                document.getElementById('btn-mostrar-buscador-historial').style.display = 'block';
+                if(document.getElementById('input-buscador-historial').value.trim() !== '') {
+                    document.getElementById('btn-mostrar-buscador-historial').style.color = '#cc0000'; // Indicador visual de que hay filtro activo
+                } else {
+                    document.getElementById('btn-mostrar-buscador-historial').style.color = 'var(--primary)'; // Vuelve a color normal
+                }
+            }
+        }
+
+        function limpiarBuscadorHistorial(e) {
+            if(e) e.preventDefault(); // Evitar que el clic cierre el buscador antes de borrar
+            document.getElementById('input-buscador-historial').value = '';
+            renderHistorialModal();
+            toggleBuscadorHistorial(false);
+        }
+
+        function abrirSustituciones() {
+            const hoy = new Date();
+            const añoMes = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
+            document.getElementById('filtro-mes-sustituciones').value = añoMes; // Filtro por defecto al mes actual
+            renderSustitucionesModal();
+            document.getElementById('modalSustituciones').style.display = 'block';
+        }
+
+        function renderSustitucionesModal() {
+            const contenedor = document.getElementById('lista-sustituciones');
+            contenedor.innerHTML = "";
+            const filtroMes = document.getElementById('filtro-mes-sustituciones').value;
+            
+            // Extraer solo las que tienen falla
+            let fallas = datosLocales.predicaciones.filter(p => p.llego === 'no');
+            fallas.sort((a, b) => new Date(b.fecha) - new Date(a.fecha)); // De más nueva a más vieja
+            
+            if (filtroMes) {
+                fallas = fallas.filter(p => p.fecha.startsWith(filtroMes));
+            }
+
+            if (fallas.length === 0) {
+                contenedor.innerHTML = `<p style="text-align:center; color:#666; margin-top:20px;">No hay sustituciones registradas${filtroMes ? ' en este mes' : ''}.</p>`;
+                return;
+            }
+
+            let htmlLista = fallas.map(p => {
+                let churchData = datosLocales.iglesias.find(ig => ig.nombre === p.iglesia);
+                let churchColor = churchData && churchData.color ? churchData.color : '#2196F3';
+                let churchIcon = churchData && churchData.icono ? churchData.icono : 'fa-church';
+                let churchBg = churchColor + '33';
+                
+                return `
+                    <div style="background: white; padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 5px solid #e91e63; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:8px; align-items:center;">
+                            <b style="font-size:0.95rem; color:#333;">${formatearFechaVisual(p.fecha)}</b>
+                            <span style="font-size:0.75rem; background-color:${churchBg}; color:${churchColor}; border:1px solid ${churchColor}; padding:3px 8px; border-radius:12px; font-weight:bold;"><i class="fas ${churchIcon}"></i> ${p.iglesia}</span>
+                        </div>
+                        <div style="font-size:0.9rem; color:#666; margin-bottom: 4px;"><i class="fas fa-user-times" style="color:#cc0000; width:20px;"></i> Faltó: <b style="text-decoration:line-through;">${p.predicador}</b></div>
+                        <div style="font-size:0.9rem; color:#333;"><i class="fas fa-user-check" style="color:#28a745; width:20px;"></i> Sustituto: <b>${p.sustituto || 'Nadie'}</b></div>
+                    </div>
+                `;
+            }).join('');
+
+            contenedor.innerHTML = htmlLista;
+        }
+
+        let predicadorHistorialActual = "";
+        function abrirHistorial(nombrePredicador) {
+            predicadorHistorialActual = nombrePredicador;
+            document.getElementById('historial-titulo').innerText = `Ranking: ${nombrePredicador}`;
+            document.getElementById('filtro-mes-historial').value = ''; // Limpiar filtro
+            document.getElementById('input-buscador-historial').value = ''; // Limpiar buscador
+            toggleBuscadorHistorial(false); // Empezar oculto
+            renderHistorialModal();
+            document.getElementById('modalHistorial').style.display = 'block';
+        }
+
+        function renderHistorialModal() {
+            const contenedor = document.getElementById('lista-historial');
+            contenedor.innerHTML = "";
+            const filtroMes = document.getElementById('filtro-mes-historial').value;
+            
+            // Extraer solo las predicaciones de este hermano y ordenarlas de las más nuevas a las más viejas
+            let misPredicaciones = datosLocales.predicaciones.filter(p => p.predicador === predicadorHistorialActual);
+            misPredicaciones.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+            
+            if (filtroMes) {
+                misPredicaciones = misPredicaciones.filter(p => p.fecha.startsWith(filtroMes));
+            }
+            
+            const inputBusqHistorial = document.getElementById('input-buscador-historial');
+            const terminosHistorial = inputBusqHistorial && inputBusqHistorial.value ? quitarAcentosExtremo(inputBusqHistorial.value).split(' ').filter(t => t.trim() !== '') : [];
+
+            if (terminosHistorial.length > 0) {
+                misPredicaciones = misPredicaciones.filter(p => {
+                    let estadoTexto = p.llego === 'no' ? 'falto no llego' : 'asistio si llego';
+                    let sustitutoTexto = p.sustituto ? p.sustituto : 'nadie';
+                    let fechaCorta = formatearFechaVisual(p.fecha);
+                    let textoCompleto = quitarAcentosExtremo(`${p.fecha} ${fechaCorta} ${p.iglesia} ${estadoTexto} ${sustitutoTexto}`);
+                    return terminosHistorial.every(term => textoCompleto.includes(term));
+                });
+            }
+
+            if (misPredicaciones.length === 0) {
+                contenedor.innerHTML = `<p style="text-align:center; color:#666; margin-top:20px;">No hay registros${filtroMes ? ' en este mes' : ''}.</p>`;
+                return;
+            }
+
+            // Cálculos del Ranking
+            let totalAsignadas = misPredicaciones.length;
+            let totalAsistidas = misPredicaciones.filter(p => p.llego !== 'no').length;
+            let totalFaltas = totalAsignadas - totalAsistidas;
+            let porcentaje = Math.round((totalAsistidas / totalAsignadas) * 100);
+
+            let htmlEstadisticas = `
+                <div style="display:flex; justify-content:space-around; background:var(--surface); padding:15px 5px; border-radius:8px; margin-bottom:15px; box-shadow:0 1px 3px rgba(0,0,0,0.2); text-align:center;">
+                    <div><b style="font-size:1.3rem; color:var(--primary);">${totalAsignadas}</b><br><span style="font-size:0.7rem; color:#666; text-transform:uppercase;">Asignado</span></div>
+                    <div><b style="font-size:1.3rem; color:#28a745;">${totalAsistidas}</b><br><span style="font-size:0.7rem; color:#666; text-transform:uppercase;">Asistió</span></div>
+                    <div><b style="font-size:1.3rem; color:#cc0000;">${totalFaltas}</b><br><span style="font-size:0.7rem; color:#666; text-transform:uppercase;">Faltó</span></div>
+                    <div><b style="font-size:1.3rem; color:#17a2b8;">${porcentaje}%</b><br><span style="font-size:0.7rem; color:#666; text-transform:uppercase;">Efectividad</span></div>
+                </div>
+            `;
+
+            let htmlLista = misPredicaciones.map(p => {
+                let status = (p.llego === 'no') 
+                    ? `<span style="color:#cc0000; font-weight:bold; font-size:0.8rem;"><i class="fas fa-times-circle"></i> Faltó (Cubrió: ${p.sustituto || 'Nadie'})</span>`
+                    : `<span style="color:#28a745; font-weight:bold; font-size:0.8rem;"><i class="fas fa-check-circle"></i> Asistió</span>`;
+                
+                let churchData = datosLocales.iglesias.find(ig => ig.nombre === p.iglesia);
+                let churchColor = churchData && churchData.color ? churchData.color : '#2196F3';
+                let churchIcon = churchData && churchData.icono ? churchData.icono : 'fa-church';
+                let churchBg = churchColor + '33'; // Transparencia para el fondo
+                
+                return `
+                    <div style="background: white; padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 5px solid ${(p.llego === 'no') ? '#cc0000' : '#28a745'}; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:5px; align-items:center;">
+                            <b style="font-size:0.95rem; color:#333;">${formatearFechaVisual(p.fecha)}</b>
+                            <span style="font-size:0.75rem; background-color:${churchBg}; color:${churchColor}; border:1px solid ${churchColor}; padding:3px 8px; border-radius:12px; font-weight:bold;"><i class="fas ${churchIcon}"></i> ${p.iglesia}</span>
+                        </div>
+                        ${status}
+                    </div>
+                `;
+            }).join('');
+
+            contenedor.innerHTML = htmlEstadisticas + htmlLista;
         }
 
         // Inicialización y Sincronización (COMPLETA Y CERRADA)
