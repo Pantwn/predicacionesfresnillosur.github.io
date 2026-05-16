@@ -184,7 +184,14 @@
                 <select id="select-predicador"></select>
             </div>
             <div class="form-group">
-                <label><i class="fas fa-calendar-day"></i> Fecha a asignar:</label>
+                <label style="margin-bottom: 5px; display: block;"><i class="fas fa-calendar-alt"></i> Mes a agendar:</label>
+                <input type="month" id="mes-selector-form" onchange="cambiarMesFormulario()" style="margin-bottom: 15px; padding: 8px; font-size: 1rem; border: 1px solid #ccc; border-radius: 5px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                    <label style="margin: 0;"><i class="fas fa-calendar-day"></i> Fecha a asignar:</label>
+                    <label style="font-size: 0.85rem; display: flex; align-items: center; gap: 5px; color: #555;">
+                        <input type="checkbox" id="chk-dias-form" onchange="renderFechasFormulario()" style="width: auto; transform: scale(1.2); margin: 0;"> + Mié/Vie
+                    </label>
+                </div>
                 <select id="select-fecha"></select>
             </div>
             </div>
@@ -263,16 +270,31 @@
         </div>
     </div>
 
-    <div id="modalLeyenda" class="modal-overlay">
+    <div id="modalLeyenda" class="modal-overlay modal-fullscreen">
         <div class="modal-content">
             <h3 style="margin-top:0;">Leyenda de Colores</h3>
-            <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;">
-                <div><span class="tag-predicador color-local" style="margin:0;">Rojo</span> = Local</div>
-                <div><span class="tag-predicador color-distrital" style="margin:0;">Verde</span> = Distrital</div>
-                <div><span class="tag-predicador color-foraneo" style="margin:0;">Azul</span> = Foráneo</div>
-                <div><span class="tag-predicador color-departamental" style="margin:0;">Amarillo</span> = Departamental</div>
-                <div><span class="tag-predicador color-pastor" style="margin:0;">Gris</span> = Pastor</div>
-                <div><span class="tag-predicador color-pastor_distrito" style="margin:0;">Morado</span> = Pastor de Distrito</div>
+            <div class="contenido-scroll">
+                <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;">
+                    <div><span class="tag-predicador color-local" style="margin:0;">Rojo</span> = Local</div>
+                    <div><span class="tag-predicador color-distrital" style="margin:0;">Verde</span> = Distrital</div>
+                    <div><span class="tag-predicador color-foraneo" style="margin:0;">Azul</span> = Foráneo</div>
+                    <div><span class="tag-predicador color-departamental" style="margin:0;">Amarillo</span> = Departamental</div>
+                    <div><span class="tag-predicador color-pastor" style="margin:0;">Gris</span> = Pastor</div>
+                    <div><span class="tag-predicador color-pastor_distrito" style="margin:0;">Morado</span> = Pastor de Distrito</div>
+                </div>
+                <div id="seccion-atajos-leyenda" style="display:none; border-top:1px solid #ccc; padding-top:10px; margin-bottom:15px;">
+                    <h4 style="margin:0 0 8px 0; color:#333;"><i class="fas fa-keyboard"></i> Atajos de Teclado (Admins)</h4>
+                    <div style="font-size:0.85rem; color:#555; display:flex; flex-direction:column; gap:5px; text-align:left;">
+                        <div><b>Tecla [-]:</b> Registrar Nuevo Predicador</div>
+                        <div><b>Tecla [+]:</b> Asignar Predicación</div>
+                        <div><b>Alt + S:</b> Ventana de Sustituciones</div>
+                        <div><b>Alt + C:</b> Calendario Mensual</div>
+                        <div><b>Alt + L:</b> Ver Leyenda de Colores</div>
+                        <div><b>Flechas [← / →]:</b> Navegar entre Sábados</div>
+                        <div><b>Flecha [↓]:</b> Regresar al Sábado Actual</div>
+                        <div><b>Tecla [ESC]:</b> Cerrar ventanas o Volver a Inicio</div>
+                    </div>
+                </div>
             </div>
             <button class="btn-secondary" onclick="document.getElementById('modalLeyenda').style.display='none'">CERRAR</button>
         </div>
@@ -459,6 +481,7 @@
                 document.getElementById('seccion-iglesias').style.display = usuarioActual.rol === 'super_admin' ? 'block' : 'none';
                 document.getElementById('seccion-usuarios').style.display = usuarioActual.rol === 'super_admin' ? 'block' : 'none';
                 document.getElementById('botones-sincronizacion-manual').style.display = usuarioActual.rol === 'super_admin' ? 'flex' : 'none';
+                if(document.getElementById('seccion-atajos-leyenda')) document.getElementById('seccion-atajos-leyenda').style.display = 'block';
                 
                 actualizarBarraInfo();
 
@@ -477,6 +500,7 @@
             document.getElementById('btn-add').style.display = 'none';
             document.getElementById('btn-logout').style.display = 'none';
             document.getElementById('botones-sincronizacion-manual').style.display = 'none';
+            if(document.getElementById('seccion-atajos-leyenda')) document.getElementById('seccion-atajos-leyenda').style.display = 'none';
             actualizarBarraInfo();
 
 
@@ -735,8 +759,141 @@
         }
     }, {passive: true});
 
+    // --- SISTEMA DE ATAJOS DE TECLADO ---
+    document.addEventListener('keydown', e => {
+        // 1. Control del botón ESCAPE para cerrar ventanas por capas o regresar a inicio
+        if (e.key === 'Escape' || e.key === 'Esc') {
+            const capasModales = [
+                { id: 'modalIconos' },
+                { id: 'modalEvaluacion', fn: cerrarEvaluacion },
+                { id: 'modalHistorial' },
+                { id: 'modalSustituciones' },
+                { id: 'modalInfoPredicacion' },
+                { id: 'modalPredicacion' },
+                { id: 'modalDiaCalendario' },
+                { id: 'modalIglesia' },
+                { id: 'modalPredicador' },
+                { id: 'modalUsuario' },
+                { id: 'modalLeyenda' }
+            ];
+            
+            let cerroModal = false;
+            for (let modal of capasModales) {
+                let el = document.getElementById(modal.id);
+                if (el && el.style.display === 'block') {
+                    if (modal.fn) modal.fn();
+                    else el.style.display = 'none';
+                    cerroModal = true;
+                    break; // Cierra solo una capa por cada pulsación de ESC
+                }
+            }
+            
+            // Si no cerró ningún popup y no estamos en mainScreen, volvemos a la pantalla principal
+            if (!cerroModal && !document.getElementById('mainScreen').classList.contains('active')) {
+                showScreen('mainScreen');
+            }
+            return;
+        }
+
+        // Evitar que los atajos se disparen si el usuario está escribiendo dentro de un cuadro de texto
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+
+        // Atajo: Tecla - (Teclado numérico o estándar) para Nuevo Predicador (Solo Administradores)
+        if ((e.key === '-' || e.code === 'NumpadSubtract') && usuarioActual) {
+            e.preventDefault();
+            abrirFormularioNuevoPredicador();
+        }
+
+        // Atajo: Tecla + (Teclado numérico o estándar) para Asignar Predicación (Solo Administradores)
+        if ((e.key === '+' || e.code === 'NumpadAdd') && usuarioActual) {
+            e.preventDefault();
+            abrirFormularioPredicacion();
+        }
+
+        // Atajo: Alt + S para abrir Sustituciones (Solo Administradores)
+        if (e.altKey && (e.key === 's' || e.key === 'S') && usuarioActual) {
+            e.preventDefault();
+            abrirSustituciones();
+        }
+
+        // Atajo: Alt + L para abrir Leyenda de colores
+        if (e.altKey && (e.key === 'l' || e.key === 'L')) {
+            e.preventDefault();
+            document.getElementById('modalLeyenda').style.display = 'block';
+        }
+
+        // Atajo: Alt + C para abrir el Calendario Mensual
+        if (e.altKey && (e.key === 'c' || e.key === 'C')) {
+            e.preventDefault();
+            abrirCalendarioMensual();
+        }
+
+        // Atajos de navegación con flechas (Solo si está activa la Pantalla Principal)
+        if (document.getElementById('mainScreen').classList.contains('active')) {
+            if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                cambiarSemana(-1); // Sábado anterior
+            }
+            if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                cambiarSemana(1); // Sábado siguiente
+            }
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                volverASabadoProximo(); // Regresar al sábado real actual
+            }
+        }
+    });
+
     // Llenar Listas Desplegables <select> dinámicamente
+        let actualFechaFormulario = null;
+        let editandoFecha = null;
+        let editandoIglesia = null;
+        function cambiarMesFormulario() {
+            const mesInput = document.getElementById('mes-selector-form').value;
+            if (mesInput) {
+                actualFechaFormulario = mesInput + "-01";
+                renderFechasFormulario();
+            }
+        }
+
+        function renderFechasFormulario() {
+            const selFecha = document.getElementById('select-fecha');
+            const mostrarTodos = document.getElementById('chk-dias-form') ? document.getElementById('chk-dias-form').checked : false;
+            const valorPrevio = selFecha.value;
+            
+            selFecha.innerHTML = "";
+            let opcionesFechas = "";
+            let targetDate = actualFechaFormulario ? new Date(actualFechaFormulario + "T12:00:00") : new Date();
+            const año = targetDate.getFullYear();
+            const mes = targetDate.getMonth();
+            const diasEnMes = new Date(año, mes + 1, 0).getDate();
+
+            for (let i = 1; i <= diasEnMes; i++) {
+                const fechaIterada = new Date(año, mes, i);
+                const diaSemana = fechaIterada.getDay();
+                const fechaISO = `${año}-${String(mes + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                
+                let fechaDisplay = formatearFechaVisual(fechaISO);
+                if (diaSemana === 6 || (mostrarTodos && (diaSemana === 3 || diaSemana === 5))) {
+                    if (diaSemana === 3) { // Miércoles
+                        opcionesFechas += `<option value="${fechaISO}" style="background-color: #fffacd;">Miércoles ${fechaDisplay}</option>`;
+                    } else if (diaSemana === 5) { // Viernes
+                        opcionesFechas += `<option value="${fechaISO}" style="background-color: #fffacd;">Viernes ${fechaDisplay}</option>`;
+                    } else if (diaSemana === 6) { // Sábado
+                        opcionesFechas += `<option value="${fechaISO}" style="background-color: #e6ffe6; font-weight: bold;">Sábado ${fechaDisplay}</option>`;
+                    }
+                }
+            }
+            selFecha.innerHTML = opcionesFechas;
+            if (valorPrevio && document.querySelector(`#select-fecha option[value="${valorPrevio}"]`)) {
+                selFecha.value = valorPrevio;
+            }
+        }
+
         function abrirFormularioPredicacion(fechaPre = null, iglesiaPre = null, predicadorPre = null) {
+            editandoFecha = fechaPre;
+            editandoIglesia = iglesiaPre;
             const selIglesia = document.getElementById('select-iglesia');
             const selPredicador = document.getElementById('select-predicador');
             const selFecha = document.getElementById('select-fecha');
@@ -748,31 +905,26 @@
             selPredicador.innerHTML = predicadoresPermitidos.map(p => `<option value="${p.nombre}">${p.nombre} (${p.tipo})</option>`).join('');
             
             // Usar el mes del calendario o el actual si se abre desde el botón (+)
-            selFecha.innerHTML = "";
-            let opcionesFechas = "";
-            let targetDate = fechaPre ? new Date(fechaPre + "T12:00:00") : new Date();
-            const año = targetDate.getFullYear();
-            const mes = targetDate.getMonth();
-            const diasEnMes = new Date(año, mes + 1, 0).getDate();
-
-            for (let i = 1; i <= diasEnMes; i++) {
-                const fechaIterada = new Date(año, mes, i);
-                const diaSemana = fechaIterada.getDay();
-                const fechaISO = `${año}-${String(mes + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-                
-                let fechaDisplay = formatearFechaVisual(fechaISO);
-                if (diaSemana === 3) { // Miércoles
-                    opcionesFechas += `<option value="${fechaISO}" style="background-color: #fffacd;">Miércoles ${fechaDisplay}</option>`;
-                } else if (diaSemana === 5) { // Viernes
-                    opcionesFechas += `<option value="${fechaISO}" style="background-color: #fffacd;">Viernes ${fechaDisplay}</option>`;
-                } else if (diaSemana === 6) { // Sábado
-                    opcionesFechas += `<option value="${fechaISO}" style="background-color: #e6ffe6; font-weight: bold;">Sábado ${fechaDisplay}</option>`;
-                }
-            }
-            selFecha.innerHTML = opcionesFechas;
+            actualFechaFormulario = fechaPre;
+            if(document.getElementById('chk-dias-form')) document.getElementById('chk-dias-form').checked = false; // Apagado por default
             
+            renderFechasFormulario();
+            
+            // Seteamos de forma segura el valor visual del selector de mes en el popup
+            const fechaBase = fechaPre ? new Date(fechaPre + "T12:00:00") : new Date();
+            const añoMesForm = `${fechaBase.getFullYear()}-${String(fechaBase.getMonth() + 1).padStart(2, '0')}`;
+            if(document.getElementById('mes-selector-form')) document.getElementById('mes-selector-form').value = añoMesForm;
+
             // Asignar los valores recibidos para arreglar el bug
-            if (fechaPre) selFecha.value = fechaPre;
+            if (fechaPre) {
+                // Forzar checkbox a true si nos pasan un día que no es sábado para que se pueda seleccionar
+                const fechaObj = new Date(fechaPre + "T12:00:00");
+                if(fechaObj.getDay() === 3 || fechaObj.getDay() === 5) {
+                    if(document.getElementById('chk-dias-form')) document.getElementById('chk-dias-form').checked = true;
+                    renderFechasFormulario();
+                }
+                selFecha.value = fechaPre;
+            }
             else selFecha.value = proximoSabado;
             
             if (iglesiaPre) selIglesia.value = iglesiaPre;
@@ -782,6 +934,7 @@
             if (buscador) { buscador.value = ""; filtrarPredicadores(); }
 
             document.getElementById('modalPredicacion').style.display = 'block';
+            setTimeout(() => document.getElementById('select-iglesia').focus(), 100);
         }
 
         function quitarAcentosExtremo(texto) {
@@ -891,6 +1044,7 @@
             if (usuarioActual && usuarioActual.rol !== 'super_admin') document.getElementById('nuevo-tipo').value = 'local';
             verificarTipoPredicador();
             document.getElementById('modalPredicador').style.display = 'block';
+            setTimeout(() => document.getElementById('nuevo-predicador').focus(), 100);
         }
 
         function abrirEditarPredicador(index) {
@@ -1184,6 +1338,12 @@
             if(iglesia && predicador && fechaSeleccionada) {
                 let nomAdmin = usuarioActual ? usuarioActual.nombre : 'Desconocido';
                 let fechaHora = new Date().toLocaleString('es-MX');
+
+                // Si estábamos editando, removemos la versión anterior para evitar duplicados al cambiar de iglesia/fecha
+                if (editandoFecha && editandoIglesia) {
+                    let idxOriginal = datosLocales.predicaciones.findIndex(p => p.fecha === editandoFecha && p.iglesia === editandoIglesia);
+                    if (idxOriginal !== -1) datosLocales.predicaciones.splice(idxOriginal, 1);
+                }
 
                 // Prevenir duplicados (si la iglesia ya tiene predicador ese día, se actualiza)
                 let existe = datosLocales.predicaciones.findIndex(p => p.fecha === fechaSeleccionada && p.iglesia === iglesia);
