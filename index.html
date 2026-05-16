@@ -310,13 +310,36 @@
         </div>
     </div>
 
-    <div id="modalEvaluacion" class="modal-overlay" style="z-index: 1000;">
+    <div id="modalEvaluacion" class="modal-overlay modal-fullscreen" style="z-index: 1000;">
         <div class="modal-content">
-            <h3 style="margin-top:0;"><i class="fas fa-clipboard-check"></i> Evaluar Asistencia</h3>
+            <h3 style="margin-top:0; padding:15px 20px 0 20px;"><i class="fas fa-clipboard-check"></i> Evaluar Asistencia</h3>
+            <div class="contenido-scroll" style="padding: 0 20px;">
             <p id="eval-desc" style="font-size: 0.9rem; color: #555; margin-bottom:15px; font-weight:bold;"></p>
+
+
+
             
+            <div id="sermon-form-container" style="display:none; background:#f0f8ff; padding:15px; border-radius:8px; margin-bottom:15px; border-left:4px solid var(--primary);">
+                <h4 style="margin-top:0; color:var(--primary); font-size:1rem;"><i class="fas fa-book-open"></i> Mi Participación (Solo Pastor)</h4>
+                <div class="form-group" style="margin-bottom:8px;">
+                    <input type="text" id="eval-sermon-titulo" placeholder="Título del Sermón" style="font-weight:bold;">
+                </div>
+                <div class="form-group" style="margin-bottom:8px;">
+                    <input type="text" id="eval-sermon-cita" placeholder="Cita Bíblica (Ej. Juan 3:16)">
+                </div>
+                <div style="display:flex; gap:5px; margin-bottom:10px;">
+                    <input type="text" id="eval-himno1" list="lista-himnos" placeholder="Himno 1" style="font-size:0.85rem; padding:8px;">
+                    <input type="text" id="eval-himno2" list="lista-himnos" placeholder="Himno 2" style="font-size:0.85rem; padding:8px;">
+                    <input type="text" id="eval-himno3" list="lista-himnos" placeholder="Himno 3" style="font-size:0.85rem; padding:8px;">
+                </div>
+                <button onclick="guardarEvaluacion()" style="background:#0277bd; padding:8px; margin-top:0;">GUARDAR MI SERMÓN AHORA</button>
+            </div>
+
             <div id="eval-countdown-container" style="display:none; text-align:center; padding: 30px 10px; font-size:1.3rem; font-weight:bold; color:var(--primary); border: 2px dashed var(--primary); border-radius: 8px; margin-bottom: 15px;">
             </div>
+
+
+
 
             <div id="eval-form-container">
                 <div class="form-group">
@@ -334,9 +357,15 @@
                 <input type="hidden" id="eval-iglesia">
                 <button onclick="guardarEvaluacion()">GUARDAR EVALUACIÓN</button>
             </div>
-            <button class="btn-secondary" onclick="cerrarEvaluacion()">CANCELAR</button>
+            </div>
+            <div style="padding: 0 20px 20px 20px;">
+                <button class="btn-secondary" onclick="cerrarEvaluacion()">CANCELAR</button>
+            </div>
         </div>
     </div>
+
+
+
 
     <div id="modalSustituciones" class="modal-overlay modal-fullscreen" style="z-index: 1000;">
         <div class="modal-content">
@@ -406,6 +435,656 @@
         let proximoSabado = "";
         let sabadoVisto = ""; // Guarda la fecha del sábado por el que estamos navegando
         let guardandoEnNube = false;
+
+        const himnario = {
+            preparacion: [
+                {n:33, t:"Tu presencia, Padre amante, invocamos", c:"EL CULTO", sc:"Inicio del Culto", l:"Con un canto de alegría, / Alabamos al Señor."},
+                {n:25, t:"Siento la presencia", c:"EL CULTO", sc:"Inicio del culto", l:"Siento la presencia del Señor en este lugar."}
+            ],
+            entrada: [
+                 {n:22, t:"Jehová está en su santo templo", c:"EL CULTO", sc:"Inicio del culto", l:""},
+                 {n:23, t:"¡Silencio! ¡Silencio!", c:"EL CULTO", sc:"Inicio del culto", l:""},
+                 {n:24, t:"Imploramos tu presencia", c:"EL CULTO", sc:"Inicio del culto", l:""},
+                 {n:25, t:"Siento la presencia del Señor", c:"EL CULTO", sc:"Inicio del culto", l:""},
+                 {n:26, t:"Aquí reunidos", c:"INICIO DEL CULTO", sc:"Inicio del culto", l:""},
+                 {n:27, t:"¡Oh Pastor divino, escucha!", c:"EL CULTO", sc:"Inicio del culto", l:""},
+                 {n:28, t:"Tu pueblo jubiloso", c:"EL CULTO", sc:"Inicio del culto", l:""},
+                 {n:29, t:"Del culto el tiempo llega", c:"EL CULTO", sc:"Inicio del culto", l:""},
+                 {n:30, t:"Abre mis ojos", c:"EL CULTO", sc:"Inicio del culto", l:""},
+                 {n:31, t:"¡Oh, Señor! al orar", c:"EL CULTO", sc:"Inicio del culto", l:""},
+                 {n:32, t:"Nos reunimos en tu santuario", c:"EL CULTO", sc:"Inicio del culto", l:""},
+                 {n:33, t:"Tu presencia, Padre amante, invocamos", c:"EL CULTO", sc:"Inicio del culto", l:""},
+                 {n:34, t:"En momentos así", c:"EL CULTO", sc:"Inicio del culto", l:""}
+            ],
+            oracion: [
+                {n:27, t:"¡Oh Pastor divino, escucha!", c:"EL CULTO", sc:"Inicio del culto", l:""},
+                 {n:28, t:"Tu pueblo jubiloso", c:"EL CULTO", sc:"Inicio del culto", l:""},
+                 {n:29, t:"Del culto el tiempo llega", c:"EL CULTO", sc:"Inicio del culto", l:""},
+                 {n:30, t:"Abre mis ojos", c:"EL CULTO", sc:"Inicio del culto", l:""},
+                 {n:31, t:"¡Oh, Señor! al orar", c:"EL CULTO", sc:"Inicio del culto", l:""}
+            ],
+            mayordomia: [
+                {n:521, t:"Al Cristo ved", c:"MAYORDOMÍA", sc:"Mayordomía", l:"Letra del himno..."},
+                {n:522, t:"Suenen las palabras", c:"MAYORDOMÍA", sc:"Mayordomía", l:"Letra del himno..."},
+                {n:523, t:"Los sabios dan su ciencia", c:"MAYORDOMÍA", sc:"Mayordomía", l:"Letra del himno..."},
+                {n:524, t:"Traían en silencio presentes al Señor", c:"MAYORDOMÍA", sc:"Mayordomía", l:"Letra del himno..."},
+                {n:525, t:"Con gratitud, llegamos", c:"MAYORDOMÍA", sc:"Mayordomía", l:"Letra del himno..."}
+            ],
+            infantil: [
+                {n:598, t:"Cristo, yo te seguiré", c:"NIÑOS", sc:"Niños", l:"Letra del himno..."},
+                 {n:599, t:"En este bello día", c:"NIÑOS", sc:"Niños", l:"Letra del himno..."},
+                 {n:600, t:"Cuando venga Jesucristo", c:"NIÑOS", sc:"Niños", l:"Letra del himno..."},
+                 {n:601, t:"Cuando leo en la Biblia", c:"NIÑOS", sc:"Niños", l:"Letra del himno..."},
+                 {n:602, t:"Es el amor divino", c:"NIÑOS", sc:"Niños", l:"Letra del himno..."},
+                 {n:603, t:"Yo temprano busco a Cristo", c:"NIÑOS", sc:"Niños", l:"Letra del himno..."},
+                 {n:604, t:"Bellas las manitas son", c:"NIÑOS", sc:"Niños", l:"Letra del himno..."},
+                 {n:605, t:"Jesús tiene tiempo", c:"NIÑOS", sc:"Niños", l:"Letra del himno..."},
+                 {n:606, t:"Llama Jesús, el Buen Pastor", c:"NIÑOS", sc:"Niños", l:"Letra del himno..."},
+                 {n:607, t:"Nítido rayo por Cristo", c:"NIÑOS", sc:"Niños", l:"Letra del himno..."}
+            ],
+            completo: [
+                      {n:1, t:"Cantad alegres al Señor", c:"EL CULTO", sc:"Adoración y alabanza", l:""},
+                      {n:2, t:"Da gloria al Señor", c:"EL CULTO", sc:"Adoración y alabanza", l:""},
+                      {n:3, t:"Unidos en Espíritu", c:"EL CULTO", sc:"Culto matutino", l:""},
+                      {n:4, t:"Alabanzas sin cesar", c:"EL CULTO", sc:"Adoración y alabanza", l:""},
+                      {n:5, t:"A ti, glorioso Dios", c:"EL CULTO", sc:"Adoración y alabanza", l:""},
+                      {n:6, t:"¡Hosanna!", c:"EL CULTO", sc:"Adoración y alabanza", l:""},
+                      {n:7, t:"Oh Dios, mi soberano Rey", c:"EL CULTO", sc:"Adoración y alabanza", l:""},
+                      {n:8, t:"¡Suenen dulces himnos!", c:"EL CULTO", sc:"Adoración y alabanza", l:""},
+                      {n:9, t:"Alabemos al Señor", c:"EL CULTO", sc:"Adoración y alabanza", l:""},
+                      {n:10, t:"Alaba al Dios de Abraham", c:"EL CULTO", sc:"Adoración y alabanza", l:""},
+                      {n:11, t:"Alma, bendice al Señor", c:"EL CULTO", sc:"Adoración y alabanza", l:""},
+                      {n:12, t:"Todos juntos reunidos", c:"EL CULTO", sc:"Culto matutino", l:""},
+                      {n:13, t:"Al Dios invisible", c:"EL CULTO", sc:"Adoración y alabanza", l:""},
+                      {n:14, t:"Engrandecido sea Dios", c:"EL CULTO", sc:"Adoración y alabanza", l:""},
+                      {n:15, t:"Loámoste, ¡oh Dios!", c:"EL CULTO", sc:"Adoración y alabanza", l:""},
+                      {n:16, t:"A nuestro Padre Dios", c:"EL CULTO", sc:"Adoración y alabanza", l:""},
+                      {n:17, t:"Oh Padre, eterno Dios", c:"EL CULTO", sc:"Adoración y alabanza", l:""},
+                      {n:18, t:"Load al Padre", c:"EL CULTO", sc:"Adoración y alabanza", l:""},
+                      {n:19, t:"Padre nuestro", c:"EL CULTO", sc:"Adoración y alabanza", l:""},
+                      {n:20, t:"A Dios, el Padre celestial", c:"EL CULTO", sc:"Adoración y alabanza", l:""},
+                      {n:21, t:"Gloria sea al Padre", c:"EL CULTO", sc:"Adoración y alabanza", l:""},
+                 {n:22, t:"Jehová está en su santo templo", c:"INICIO DEL CULTO", sc:"Inicio del culto", l:""},
+                 {n:23, t:"¡Silencio! ¡Silencio!", c:"EL CULTO", sc:"Inicio del culto", l:""},
+                 {n:24, t:"Imploramos tu presencia", c:"EL CULTO", sc:"Inicio del culto", l:""},
+                 {n:25, t:"Siento la presencia del Señor", c:"EL CULTO", sc:"Inicio del culto", l:""},
+                 {n:26, t:"Aquí reunidos", c:"INICIO DEL CULTO", sc:"Inicio del culto", l:""},
+                 {n:27, t:"¡Oh Pastor divino, escucha!", c:"EL CULTO", sc:"Inicio del culto", l:""},
+                 {n:28, t:"Tu pueblo jubiloso", c:"EL CULTO", sc:"Inicio del culto", l:""},
+                 {n:29, t:"Del culto el tiempo llega", c:"EL CULTO", sc:"Inicio del culto", l:""},
+                 {n:30, t:"Abre mis ojos", c:"EL CULTO", sc:"Inicio del culto", l:""},
+                 {n:31, t:"¡Oh, Señor! al orar", c:"EL CULTO", sc:"Inicio del culto", l:""},
+                 {n:32, t:"Nos reunimos en tu santuario", c:"EL CULTO", sc:"Inicio del culto", l:""},
+                 {n:33, t:"Tu presencia, Padre amante, invocamos", c:"EL CULTO", sc:"Inicio del culto", l:""},
+                 {n:34, t:"En momentos así", c:"EL CULTO", sc:"Inicio del culto", l:""},
+                 {n:35, t:"Oye, oh Señor", c:"EL CULTO", sc:"Cierre del culto", l:""},
+                 {n:36, t:"¡Oh, Dios, que oyes cada oración!", c:"EL CULTO", sc:"Cierre del culto", l:""},
+                 {n:37, t:"Dios os guarde", c:"EL CULTO", sc:"Cierre del culto", l:""},
+                 {n:38, t:"Que Dios te guarde", c:"EL CULTO", sc:"Cierre del culto", l:""},
+                 {n:39, t:"Despide hoy tu grey", c:"EL CULTO", sc:"Cierre del culto", l:""},
+                 {n:40, t:"Shalom", c:"EL CULTO", sc:"Cierre del Culto", l:""},
+                 {n:41, t:"Gracia, amor y comunión", c:"EL CULTO", sc:"Cierre del culto", l:""},
+                 {n:42, t:"Queda, Señor", c:"EL CULTO", sc:"Cierre del culto", l:""},
+                 {n:43, t:"Agua de vida", c:"EL CULTO", sc:"Cierre del culto", l:""},
+                 {n:44, t:"Despídenos con tu bendición", c:"EL CULTO", sc:"Cierre del culto", l:""},
+                 {n:45, t:"Después, Señor", c:"EL CULTO", sc:"Cierre del culto", l:""},
+                 {n:46, t:"Da gloria al Señor", c:"EL CULTO", sc:"Adoración y alabanza", l:""},
+                 {n:47, t:"Engrandecido sea Dios", c:"EL CULTO", sc:"Adoración y alabanza", l:""},
+                 {n:48, t:"Oh Dios, si he ofendido un corazón", c:"CIERRE DEL CULTO", sc:"Cierre del culto", l:""},
+                 {n:49, t:"Cristo, ya la noche cierra", c:"CIERRE DEL CULTO", sc:"Cierre del culto", l:""},
+                 {n:50, t:"Baja el sol / Queda, Señor", c:"EL CULTO", sc:"Culto vespertino / Cierre", l:""},
+                 {n:51, t:"Nuestro sol se pone ya", c:"CIERRE DEL CULTO", sc:"Cierre del culto", l:""},
+                 {n:52, t:"Señor Jesús, el día ya se fue", c:"CIERRE DEL CULTO", sc:"Cierre del culto", l:""},
+                 {n:53, t:"¡Oh amor de Dios!", c:"DIOS EL PADRE", sc:"Amor y fidelidad de Dios", l:""},
+                 {n:54, t:"Tan bueno es Dios", c:"DIOS EL PADRE", sc:"Amor y fidelidad de Dios", l:""},
+                 {n:55, t:"Grande, Señor, es tu misericordia", c:"DIOS EL PADRE", sc:"Amor y fidelidad de Dios", l:""},
+                 {n:56, t:"De tal manera amó", c:"DIOS EL PADRE", sc:"Amor y fidelidad de Dios", l:""},
+                 {n:57, t:"Mi Dios me ama", c:"DIOS EL PADRE", sc:"Amor y fidelidad de Dios", l:""},
+                 {n:58, t:"Grande es el amor divino", c:"DIOS EL PADRE", sc:"Amor y fidelidad de Dios", l:""},
+                 {n:59, t:"Mirad qué amor", c:"DIOS EL PADRE", sc:"Amor y fidelidad de Dios", l:""},
+                 {n:60, t:"¡Santo! ¡Santo! ¡Santo! Tu gloria llena", c:"DIOS EL PADRE", sc:"Majestad y poder de Dios", l:""},
+                 {n:61, t:"Santo, Santo, Santo, Dios Omnipotente", c:"DIOS EL PADRE", sc:"Majestad y poder de Dios", l:""},
+                 {n:62, t:"Santo, santo, santo, santo es el Señor", c:"DIOS EL PADRE", sc:"Majestad y poder de Dios", l:""},
+                 {n:63, t:"Al Rey adorad", c:"DIOS EL PADRE", sc:"Majestad y poder de Dios", l:""},
+                 {n:64, t:"Yo canto el poder de Dios", c:"DIOS EL PADRE", sc:"Majestad y poder de Dios", l:""},
+                 {n:65, t:"El mundo es de mi Dios", c:"DIOS EL PADRE", sc:"Majestad y poder de Dios", l:""},
+                 {n:66, t:"¿Sabes cuántos?", c:"DIOS EL PADRE", sc:"Majestad y poder de Dios", l:""},
+                 {n:67, t:"¡Señor, yo te conozco!", c:"DIOS EL PADRE", sc:"Majestad y poder de Dios", l:""},
+                 {n:68, t:"Todo lo que ha creado Dios", c:"DIOS EL PADRE", sc:"Majestad y poder de Dios", l:""},
+                 {n:69, t:"Señor, mi Dios", c:"DIOS EL PADRE", sc:"Majestad y poder de Dios", l:""},
+                 {n:70, t:"¡Nuestro Dios reina!", c:"DIOS EL PADRE", sc:"Majestad y poder de Dios", l:""},
+                 {n:71, t:"Cada cosa hermosa", c:"DIOS EL PADRE", sc:"Majestad y poder de Dios", l:""},
+                 {n:72, t:"Fue un milagro", c:"DIOS EL PADRE", sc:"Majestad y poder de Dios", l:""},
+                 {n:73, t:"La creación", c:"DIOS EL PADRE", sc:"Majestad y poder de Dios", l:""},
+                 {n:74, t:"Himno al Creador", c:"DIOS EL PADRE", sc:"Majestad y poder de Dios", l:""},
+                 {n:75, t:"Grande es Jehová", c:"DIOS EL PADRE", sc:"Majestad y poder de Dios", l:""},
+                 {n:76, t:"Eterno Dios, mi Creador", c:"DIOS EL PADRE", sc:"Majestad y poder de Dios", l:""},
+                 {n:77, t:"Sea exaltado", c:"DIOS EL PADRE", sc:"Majestad y poder de Dios", l:""},
+                 {n:78, t:"Noche de paz", c:"JESUCRISTO", sc:"Nacimiento de Cristo", l:""},
+                 {n:79, t:"Se oye un canto en alta esfera", c:"JESUCRISTO", sc:"Nacimiento de Cristo", l:""},
+                 {n:80, t:"Venid, pastorcillos", c:"JESUCRISTO", sc:"Nacimiento de Cristo", l:""},
+                 {n:81, t:"Noche de paz (Versión 2)", c:"JESUCRISTO", sc:"Nacimiento de Cristo", l:""},
+                 {n:82, t:"Ya repican las campanas", c:"JESUCRISTO", sc:"Nacimiento de Cristo", l:""},
+                 {n:83, t:"La primera Navidad", c:"JESUCRISTO", sc:"Nacimiento de Cristo", l:""},
+                 {n:84, t:"Ve, dilo en las montañas", c:"JESUCRISTO", sc:"Nacimiento de Cristo", l:""},
+                 {n:85, t:"Allá en el pesebre", c:"JESUCRISTO", sc:"Nacimiento de Cristo", l:""},
+                 {n:86, t:"A medianoche en Belén", c:"JESUCRISTO", sc:"Nacimiento de Cristo", l:""},
+                 {n:87, t:"Venid, fieles todos", c:"JESUCRISTO", sc:"Nacimiento de Cristo", l:""},
+                 {n:88, t:"Oh, aldehuela de Belén", c:"JESUCRISTO", sc:"Nacimiento de Cristo", l:""},
+                 {n:89, t:"Cristianos alegraos hoy", c:"JESUCRISTO", sc:"Nacimiento de Cristo", l:""},
+                 {n:90, t:"Somos del oriente", c:"JESUCRISTO", sc:"Nacimiento de Cristo", l:""},
+                 {n:91, t:"¿Qué niño es este?", c:"JESUCRISTO", sc:"Nacimiento de Cristo", l:""},
+                 {n:92, t:"Ángeles cantando están", c:"JESUCRISTO", sc:"Nacimiento de Cristo", l:""},
+                 {n:93, t:"Hubo Uno que quiso", c:"JESUCRISTO", sc:"Muerte de Cristo", l:""},
+                 {n:94, t:"Sangró mi soberano Dios", c:"JESUCRISTO", sc:"Muerte de Cristo", l:""},
+                 {n:95, t:"Un día", c:"JESUCRISTO", sc:"Muerte de Cristo", l:""},
+                 {n:96, t:"Al contemplar la excelsa cruz", c:"JESUCRISTO", sc:"Muerte de Cristo", l:""},
+                 {n:97, t:"En el monte Calvario", c:"JESUCRISTO", sc:"Muerte de Cristo", l:""},
+                 {n:98, t:"Rostro divino", c:"JESUCRISTO", sc:"Muerte de Cristo", l:""},
+                 {n:99, t:"Jamás podrá alguien separarnos", c:"JESUCRISTO", sc:"Muerte de Cristo", l:""},
+                 {n:100, t:"¡Dulces momentos!", c:"JESUCRISTO", sc:"Muerte de Cristo", l:""},
+                 {n:101, t:"Cabeza sacrosanta", c:"JESUCRISTO", sc:"Muerte de Cristo", l:""},
+                 {n:102, t:"Cordero de Dios", c:"JESUCRISTO", sc:"Muerte de Cristo", l:""},
+                 {n:103, t:"Jesús resucitado", c:"JESUCRISTO", sc:"Resurrección de Cristo", l:""},
+                 {n:104, t:"La tumba le encerró", c:"JESUCRISTO", sc:"Resurrección de Cristo", l:""},
+                 {n:105, t:"Cristo ha resucitado", c:"JESUCRISTO", sc:"Resurrección de Cristo", l:""},
+                 {n:106, t:"Tuya es la gloria", c:"JESUCRISTO", sc:"Resurrección de Cristo", l:""},
+                 {n:107, t:"Canto el gran amor", c:"AMOR DE CRISTO", sc:"Amor de Cristo", l:""},
+                 {n:108, t:"Amigo fiel es Cristo", c:"AMOR DE CRISTO", sc:"Amor de Cristo", l:""},
+                 {n:109, t:"Un buen amigo tengo yo", c:"AMOR DE CRISTO", sc:"Amor de Cristo", l:""},
+                 {n:110, t:"Cristo es el mejor amigo", c:"AMOR DE CRISTO", sc:"Amor de Cristo", l:""},
+                 {n:111, t:"Como Jesús no hay otro amigo", c:"AMOR DE CRISTO", sc:"Amor de Cristo", l:""},
+                 {n:112, t:"Ningún otro me amó cual Cristo", c:"AMOR DE CRISTO", sc:"Amor de Cristo", l:""},
+                 {n:113, t:"Amor que no me dejarás", c:"AMOR DE CRISTO", sc:"Amor de Cristo", l:""},
+                 {n:114, t:"Dime la antigua historia", c:"AMOR DE CRISTO", sc:"Amor de Cristo", l:""},
+                 {n:115, t:"¡Oh, cuán grande amor!", c:"AMOR DE CRISTO", sc:"Amor de Cristo", l:""},
+                 {n:116, t:"Cristo está a mi lado", c:"AMOR DE CRISTO", sc:"Amor de Cristo", l:""},
+                 {n:117, t:"No sé por qué", c:"AMOR DE CRISTO", sc:"Amor de Cristo", l:""},
+                 {n:118, t:"Cuando estés cansado y abatido", c:"AMOR DE CRISTO", sc:"Amor de Cristo", l:""},
+                 {n:119, t:"De su trono, mi Jesús", c:"AMOR DE CRISTO", sc:"Amor de Cristo", l:""},
+                 {n:120, t:"¡Cuánto me alegra!", c:"AMOR DE CRISTO", sc:"Amor de Cristo", l:""},
+                 {n:121, t:"Es Jesucristo la vida, la luz", c:"AMOR DE CRISTO", sc:"Amor de Cristo", l:""},
+                 {n:122, t:"Divino pastor", c:"AMOR DE CRISTO", sc:"Amor de Cristo", l:""},
+                 {n:123, t:"¡Cuánto nos ama Jesús!", c:"AMOR DE CRISTO", sc:"Amor de Cristo", l:""},
+                 {n:124, t:"Ama el Pastor sus ovejas", c:"AMOR DE CRISTO", sc:"Amor de Cristo", l:""},
+                 {n:125, t:"Infinito amor de Cristo", c:"AMOR DE CRISTO", sc:"Amor de Cristo", l:""},
+                 {n:126, t:"Abrigadas y salvas en el redil", c:"AMOR DE CRISTO", sc:"Amor de Cristo", l:""},
+                 {n:127, t:"Cristo, nombre dulce", c:"ALABANZA A CRISTO", sc:"Alabanza a Cristo", l:""},
+                 {n:128, t:"¡Tu nombre es dulce, buen Jesús!", c:"ALABANZA A CRISTO", sc:"Alabanza a Cristo", l:""},
+                 {n:129, t:"Cual Jesús no hay otro nombre", c:"ALABANZA A CRISTO", sc:"Alabanza a Cristo", l:""},
+                 {n:130, t:"Cristo, Cristo, Cristo", c:"ALABANZA A CRISTO", sc:"Alabanza a Cristo", l:""},
+                 {n:131, t:"Bendito es el nombre de Jesús", c:"ALABANZA A CRISTO", sc:"Alabanza a Cristo", l:""},
+                 {n:132, t:"Dulce, hermoso nombre es Jesús", c:"ALABANZA A CRISTO", sc:"Alabanza a Cristo", l:""},
+                 {n:133, t:"Venid, con cánticos venid", c:"ALABANZA A CRISTO", sc:"Alabanza a Cristo", l:""},
+                 {n:134, t:"Cual mirra fragante", c:"ALABANZA A CRISTO", sc:"Alabanza a Cristo", l:""},
+                 {n:135, t:"Cristo, nombre sublime", c:"ALABANZA A CRISTO", sc:"Alabanza a Cristo", l:""},
+                 {n:136, t:"¡Oh, cuánto amo a Cristo!", c:"ALABANZA A CRISTO", sc:"Alabanza a Cristo", l:""},
+                 {n:137, t:"De Jesús el nombre invoca", c:"ALABANZA A CRISTO", sc:"Alabanza a Cristo", l:""},
+                 {n:138, t:"De mi amante Salvador", c:"ALABANZA A CRISTO", sc:"Alabanza a Cristo", l:""},
+                 {n:139, t:"La tierna voz del Salvador", c:"ALABANZA A CRISTO", sc:"Alabanza a Cristo", l:""},
+                 {n:140, t:"Te quiero, te quiero", c:"ALABANZA A CRISTO", sc:"Alabanza a Cristo", l:""},
+                 {n:141, t:"¡Alabadle!", c:"ALABANZA A CRISTO", sc:"Alabanza a Cristo", l:""},
+                 {n:142, t:"Venid, cantad, de gozo en plenitud", c:"ALABANZA A CRISTO", sc:"Alabanza a Cristo", l:""},
+                 {n:143, t:"Digno eres tú", c:"ALABANZA A CRISTO", sc:"Alabanza a Cristo", l:""},
+                 {n:144, t:"Mi Salvador", c:"ALABANZA A CRISTO", sc:"Alabanza a Cristo", l:""},
+                 {n:145, t:"Con acentos de alegría", c:"ALABANZA A CRISTO", sc:"Alabanza a Cristo", l:""},
+                 {n:146, t:"Ni en la tierra", c:"ALABANZA A CRISTO", sc:"Alabanza a Cristo", l:""},
+                 {n:147, t:"A Dios sea gloria", c:"ALABANZA A CRISTO", sc:"Alabanza a Cristo", l:""},
+                 {n:148, t:"Solo Cristo", c:"ALABANZA A CRISTO", sc:"Alabanza a Cristo", l:""},
+                 {n:149, t:"Junto a la cruz do Jesús murió", c:"ALABANZA A CRISTO", sc:"Alabanza a Cristo", l:""},
+                 {n:150, t:"A Cristo doy mi canto", c:"ALABANZA A CRISTO", sc:"Alabanza a Cristo", l:""},
+                 {n:151, t:"Por eso lo amo", c:"ALABANZA A CRISTO", sc:"Alabanza a Cristo", l:""},
+                 {n:152, t:"A ti, Jesús", c:"ALABANZA A CRISTO", sc:"Alabanza a Cristo", l:""},
+                 {n:153, t:"Ved a Cristo", c:"ALABANZA A CRISTO", sc:"Alabanza a Cristo", l:""},
+                 {n:154, t:"Dad gloria al Cordero Rey", c:"ALABANZA A CRISTO", sc:"Alabanza a Cristo", l:""},
+                 {n:155, t:"En Sion Jesús hoy reina", c:"ALABANZA A CRISTO", sc:"Alabanza a Cristo", l:""},
+                 {n:156, t:"A Cristo coronad", c:"ALABANZA A CRISTO", sc:"Alabanza a Cristo", l:""},
+                 {n:157, t:"¡Majestad!", c:"ALABANZA A CRISTO", sc:"Alabanza a Cristo", l:""},
+                 {n:158, t:"Amanece ya la mañana de oro", c:"SEGUNDA VENIDA", sc:"Segunda venida de Cristo", l:""},
+                 {n:159, t:"Yo espero la mañana", c:"SEGUNDA VENIDA", sc:"Segunda venida de Cristo", l:""},
+                 {n:160, t:"Viene otra vez nuestro Salvador", c:"SEGUNDA VENIDA", sc:"Segunda venida de Cristo", l:""},
+                 {n:161, t:"¡Oh! cuán gratas las nuevas", c:"SEGUNDA VENIDA", sc:"Segunda venida de Cristo", l:""},
+                 {n:162, t:"En presencia estar de Cristo", c:"SEGUNDA VENIDA", sc:"Segunda venida de Cristo", l:""},
+                 {n:163, t:"Cristo viene, esto es cierto", c:"SEGUNDA VENIDA", sc:"Segunda venida de Cristo", l:""},
+                 {n:164, t:"Jesús pronto volverá", c:"SEGUNDA VENIDA", sc:"Segunda venida de Cristo", l:""},
+                 {n:165, t:"¡Vendrá el Señor!", c:"SEGUNDA VENIDA", sc:"Segunda venida de Cristo", l:""},
+                 {n:166, t:"Siervos de Dios, la trompeta tocad", c:"SEGUNDA VENIDA", sc:"Segunda venida de Cristo", l:""},
+                 {n:167, t:"¿Quién en deslumbrante gloria?", c:"SEGUNDA VENIDA", sc:"Segunda venida de Cristo", l:""},
+                 {n:168, t:"El Rey que viene", c:"SEGUNDA VENIDA", sc:"Segunda venida de Cristo", l:""},
+                 {n:169, t:"Cuando suene la trompeta", c:"SEGUNDA VENIDA", sc:"Segunda venida de Cristo", l:""},
+                 {n:170, t:"La segunda venida de Cristo", c:"SEGUNDA VENIDA", sc:"Segunda venida de Cristo", l:""},
+                 {n:171, t:"¿Has oído el mensaje?", c:"SEGUNDA VENIDA", sc:"Segunda venida de Cristo", l:""},
+                 {n:172, t:"Promesa dulce", c:"SEGUNDA VENIDA", sc:"Segunda venida de Cristo", l:""},
+                 {n:173, t:"¿Será al albor?", c:"SEGUNDA VENIDA", sc:"Segunda venida de Cristo", l:""},
+                 {n:174, t:"Mira los hitos", c:"SEGUNDA VENIDA", sc:"Segunda venida de Cristo", l:""},
+                 {n:175, t:"Ved a Cristo, que se acerca", c:"SEGUNDA VENIDA", sc:"Segunda venida de Cristo", l:""},
+                 {n:176, t:"Tú verás al Rey viniendo", c:"SEGUNDA VENIDA", sc:"Segunda venida de Cristo", l:""},
+                 {n:177, t:"Los tres mensajes angélicos", c:"SEGUNDA VENIDA", sc:"Segunda venida de Cristo", l:""},
+                 {n:178, t:"Contemplé la gloria", c:"SEGUNDA VENIDA", sc:"Segunda venida de Cristo", l:""},
+                 {n:179, t:"¡Cristo viene! Aquel día se acerca", c:"SEGUNDA VENIDA", sc:"Segunda venida de Cristo", l:""},
+                 {n:180, t:"Sí, lo veremos", c:"SEGUNDA VENIDA", sc:"Segunda venida de Cristo", l:""},
+                 {n:181, t:"Una esperanza", c:"SEGUNDA VENIDA", sc:"Segunda venida de Cristo", l:""},
+                 {n:182, t:"Veremos a Cristo", c:"SEGUNDA VENIDA", sc:"Segunda venida de Cristo", l:""},
+                 {n:183, t:"No me olvidé de ti", c:"SEGUNDA VENIDA", sc:"Segunda venida de Cristo", l:""},
+                 {n:184, t:"Nunca te rindas", c:"SEGUNDA VENIDA", sc:"Segunda venida de Cristo", l:""},
+                 {n:185, t:"Al cielo voy", c:"SEGUNDA VENIDA", sc:"Segunda venida de Cristo", l:""},
+                 {n:186, t:"Hace años escuché", c:"SEGUNDA VENIDA", sc:"Segunda venida de Cristo", l:""},
+                 {n:187, t:"Aunque anochezca", c:"SEGUNDA VENIDA", sc:"Segunda venida de Cristo", l:""},
+                 {n:188, t:"Gran alegría", c:"SEGUNDA VENIDA", sc:"Segunda venida de Cristo", l:""},
+                 {n:189, t:"Cristo muy pronto vendrá", c:"SEGUNDA VENIDA", sc:"Segunda venida de Cristo", l:""},
+                 {n:190, t:"Santo Espíritu de Cristo", c:"EL ESPÍRITU SANTO", sc:"El Espíritu Santo", l:""},
+                 {n:191, t:"La nueva proclamad", c:"EL ESPÍRITU SANTO", sc:"El Espíritu Santo", l:""},
+                 {n:192, t:"Llena mi ser", c:"EL ESPÍRITU SANTO", sc:"El Espíritu Santo", l:""},
+                 {n:193, t:"Dios nos ha dado promesa", c:"EL ESPÍRITU SANTO", sc:"El Espíritu Santo", l:""},
+                 {n:194, t:"Vive en mí", c:"EL ESPÍRITU SANTO", sc:"El Espíritu Santo", l:""},
+                 {n:195, t:"Abre mis ojos a la luz", c:"EL ESPÍRITU SANTO", sc:"El Espíritu Santo", l:""},
+                 {n:196, t:"Santo Espíritu de Dios", c:"EL ESPÍRITU SANTO", sc:"El Espíritu Santo", l:""},
+                 {n:197, t:"Dulce Espíritu", c:"EL ESPÍRITU SANTO", sc:"El Espíritu Santo", l:""},
+                 {n:198, t:"Desciende, Espíritu de amor", c:"EL ESPÍRITU SANTO", sc:"El Espíritu Santo", l:""},
+                 {n:199, t:"Movidos por tu Espíritu", c:"EL ESPÍRITU SANTO", sc:"El Espíritu Santo", l:""},
+                 {n:200, t:"Bautízanos hoy", c:"EL ESPÍRITU SANTO", sc:"El Espíritu Santo", l:""},
+                 {n:201, t:"Canción del Espíritu", c:"EL ESPÍRITU SANTO", sc:"El Espíritu Santo", l:""},
+                 {n:202, t:"Danos el fuego", c:"EL ESPÍRITU SANTO", sc:"El Espíritu Santo", l:""},
+                 {n:203, t:"Santo Espíritu llena mi vida", c:"EL ESPÍRITU SANTO", sc:"El Espíritu Santo", l:""},
+                 {n:204, t:"Oh, cantádmelas otra vez", c:"LAS SAGRADAS ESCRITURAS", sc:"Las Sagradas Escrituras", l:""},
+                 {n:205, t:"Dadme la Biblia", c:"LAS SAGRADAS ESCRITURAS", sc:"Las Sagradas Escrituras", l:""},
+                 {n:206, t:"Padre, tu Palabra es mi delicia", c:"LAS SAGRADAS ESCRITURAS", sc:"Las Sagradas Escrituras", l:""},
+                 {n:207, t:"Dios nos habla", c:"LAS SAGRADAS ESCRITURAS", sc:"Las Sagradas Escrituras", l:""},
+                 {n:208, t:"¡Santa Biblia!", c:"LAS SAGRADAS ESCRITURAS", sc:"Las Sagradas Escrituras", l:""},
+                 {n:209, t:"La Biblia nos habla de Cristo", c:"EL EVANGELIO", sc:"Invitación", l:""},
+                 {n:210, t:"Huye cual ave", c:"EL EVANGELIO", sc:"Invitación", l:""},
+                 {n:211, t:"Fija tus ojos en Cristo", c:"EL EVANGELIO", sc:"Invitación", l:""},
+                 {n:212, t:"A tu puerta Cristo está", c:"EL EVANGELIO", sc:"Invitación", l:""},
+                 {n:213, t:"Tierno y amante, Jesús nos invita", c:"EL EVANGELIO", sc:"Invitación", l:""},
+                 {n:214, t:"Mientras Jesús te llama", c:"EL EVANGELIO", sc:"Invitación", l:""},
+                 {n:215, t:"Con voz benigna te llama Jesús", c:"EL EVANGELIO", sc:"Invitación", l:""},
+                 {n:216, t:"Dios al pródigo llama", c:"EL EVANGELIO", sc:"Invitación", l:""},
+                 {n:217, t:"Bienvenida da Jesús", c:"EL EVANGELIO", sc:"Invitación", l:""},
+                 {n:218, t:"A Jesucristo ven sin tardar", c:"EL EVANGELIO", sc:"Invitación", l:""},
+                 {n:219, t:"Tan triste y tan lejos de Dios", c:"EL EVANGELIO", sc:"Invitación", l:""},
+                 {n:220, t:"Allá la puerta abierta está", c:"EL EVANGELIO", sc:"Invitación", l:""},
+                 {n:221, t:"Puertas abiertas encontrarán", c:"EL EVANGELIO", sc:"Invitación", l:""},
+                 {n:222, t:"Del trono celestial", c:"EL EVANGELIO", sc:"Invitación", l:""},
+                 {n:223, t:"Oí la voz del Salvador", c:"EL EVANGELIO", sc:"Invitación", l:""},
+                 {n:224, t:"Oí la voz del buen Jesús", c:"EL EVANGELIO", sc:"Invitación", l:""},
+                 {n:225, t:"Un hombre llegose de noche a Jesús", c:"EL EVANGELIO", sc:"Invitación", l:""},
+                 {n:226, t:"Buscad primero", c:"EL EVANGELIO", sc:"Invitación", l:""},
+                 {n:227, t:"Preste oídos el humano", c:"EL EVANGELIO", sc:"Invitación", l:""},
+                 {n:228, t:"Me buscaréis y me hallaréis", c:"EL EVANGELIO", sc:"Invitación", l:""},
+                 {n:229, t:"¿Has pensado lo que puede costar?", c:"EL EVANGELIO", sc:"Invitación", l:""},
+                 {n:230, t:"Abre tu corazón", c:"EL EVANGELIO", sc:"Invitación", l:""},
+                 {n:231, t:"Todo en el altar", c:"EL EVANGELIO", sc:"Invitación", l:""},
+                 {n:232, t:"Entrégate en oración", c:"EL EVANGELIO", sc:"Invitación", l:""},
+                 {n:233, t:"Ven a la Fuente de vida", c:"EL EVANGELIO", sc:"Invitación", l:""},
+                 {n:234, t:"¿Temes que en la lucha?", c:"EL EVANGELIO", sc:"Invitación", l:""},
+                 {n:235, t:"La razón de vivir", c:"EL EVANGELIO", sc:"Invitación", l:""},
+                 {n:236, t:"A Jesús entrega todo", c:"EL EVANGELIO", sc:"Invitación", l:""},
+                 {n:237, t:"Jesús hoy espera entrar en tu ser", c:"EL EVANGELIO", sc:"Invitación", l:""},
+                 {n:239, t:"De Dios vagaba lejos yo", c:"ARREPENTIMIENTO", sc:"Arrepentimiento", l:""},
+                 {n:240, t:"Te ruego, oh Dios", c:"ARREPENTIMIENTO", sc:"Arrepentimiento", l:""},
+                 {n:241, t:"Perdón te ruego, mi Señor y Dios", c:"ARREPENTIMIENTO", sc:"Arrepentimiento", l:""},
+                 {n:242, t:"Una es, Señor, mi petición", c:"ARREPENTIMIENTO", sc:"Arrepentimiento", l:""},
+                 {n:243, t:"Entrego todo a Cristo", c:"ARREPENTIMIENTO", sc:"Arrepentimiento", l:""},
+                 {n:244, t:"Padre, Dios / Cristo, Señor", c:"ARREPENTIMIENTO", sc:"Arrepentimiento / Consagración", l:""},
+                 {n:245, t:"Cúmplase, oh Cristo, tu voluntad", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:246, t:"Te quiero, mi Señor", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:247, t:"Yo te seguiré", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:248, t:"Que mi vida entera esté", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:249, t:"Tal como soy", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:250, t:"Padre, a tus pies me postro", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:251, t:"No yo, sino él", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:252, t:"Dejo el mundo", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:253, t:"Tuyo soy, Jesús", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:254, t:"Anhelo ser limpio", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:255, t:"Oh Cristo, te adoro", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:256, t:"Jesús, yo he prometido", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:257, t:"¡Oh! ven, te invito, Cristo", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:258, t:"Tú dejaste tu trono", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:259, t:"Mi espíritu, alma y cuerpo", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:260, t:"Junto a la cruz de Cristo", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:261, t:"Salvador, a ti me rindo", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:262, t:"Los tesoros del mundo", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:263, t:"Entra en este corazón", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:264, t:"Un día más por Cristo", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:265, t:"La senda ancha dejaré", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:266, t:"Vivo por Cristo", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:267, t:"A la cruz de Cristo voy", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:268, t:"¿Puedo oír tu voz llamando?", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:269, t:"Prefiero a mi Cristo", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:270, t:"Meditar en Jesús", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:271, t:"Hoy me llama el mundo en vano", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:272, t:"De esclavitud", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:273, t:"Tu vida, oh Salvador", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:274, t:"¿Qué te daré, Maestro?", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:275, t:"Humilde oración", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:276, t:"Con nuestras mentes", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:277, t:"Amarte más", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:278, t:"¿Puede el mundo ver a Jesús en mí?", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:279, t:"Transfórmame a tu imagen", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:280, t:"Ser semejante a Jesús", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:281, t:"He decidido seguir a Cristo", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:282, t:"¡Brilla, Jesús!", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:283, t:"Ven, Señor Jesús", c:"CONSAGRACIÓN", sc:"Consagración", l:""},
+                 {n:284, t:"Me dice el Salvador", c:"SALVACIÓN Y REDENCIÓN", sc:"Salvación y redención", l:""},
+                 {n:285, t:"Confío en Jesucristo", c:"SALVACIÓN Y REDENCIÓN", sc:"Salvación y redención", l:""},
+                 {n:286, t:"Hay una fuente sin igual", c:"SALVACIÓN Y REDENCIÓN", sc:"Salvación y redención", l:""},
+                 {n:287, t:"Rey de mi vida", c:"SALVACIÓN Y REDENCIÓN", sc:"Salvación y redención", l:""},
+                 {n:288, t:"Al contemplarte, mi Salvador", c:"SALVACIÓN Y REDENCIÓN", sc:"Salvación y redención", l:""},
+                 {n:289, t:"¿Qué me puede dar perdón?", c:"SALVACIÓN Y REDENCIÓN", sc:"Salvación y redención", l:""},
+                 {n:290, t:"Fuente de la vida eterna", c:"SALVACIÓN Y REDENCIÓN", sc:"Salvación y redención", l:""},
+                 {n:291, t:"Perdido, fui a mi Jesús", c:"SALVACIÓN Y REDENCIÓN", sc:"Salvación y redención", l:""},
+                 {n:292, t:"Por fe en Cristo, el Redentor", c:"SALVACIÓN Y REDENCIÓN", sc:"Salvación y redención", l:""},
+                 {n:293, t:"¿Quieres ser salvo de toda maldad?", c:"SALVACIÓN Y REDENCIÓN", sc:"Salvación y redención", l:""},
+                 {n:294, t:"En Jesús por fe confío", c:"SALVACIÓN Y REDENCIÓN", sc:"Salvación y redención", l:""},
+                 {n:295, t:"Las manos, Padre", c:"SALVACIÓN Y REDENCIÓN", sc:"Salvación y redención", l:""},
+                 {n:296, t:"Comprado con sangre por Cristo", c:"SALVACIÓN Y REDENCIÓN", sc:"Salvación y redención", l:""},
+                 {n:297, t:"Salvado con sangre por Cristo", c:"SALVACIÓN Y REDENCIÓN", sc:"Salvación y redención", l:""},
+                 {n:298, t:"Al Calvario, solo, Jesús ascendió", c:"SALVACIÓN Y REDENCIÓN", sc:"Salvación y redención", l:""},
+                 {n:299, t:"Hay vida en mirar", c:"SALVACIÓN Y REDENCIÓN", sc:"Salvación y redención", l:""},
+                 {n:300, t:"Lejos de mi Padre Dios", c:"SALVACIÓN Y REDENCIÓN", sc:"Salvación y redención", l:""},
+                 {n:301, t:"Cristo es mi amante Salvador", c:"SALVACIÓN Y REDENCIÓN", sc:"Salvación y redención", l:""},
+                 {n:302, t:"Grato es contar la historia", c:"SALVACIÓN Y REDENCIÓN", sc:"Salvación y redención", l:""},
+                 {n:303, t:"Sublime gracia", c:"SALVACIÓN Y REDENCIÓN", sc:"Salvación y redención", l:""},
+                 {n:304, t:"Mi Redentor, el Rey de gloria", c:"SALVACIÓN Y REDENCIÓN", sc:"Salvación y redención", l:""},
+                 {n:305, t:"Maravillosa su gracia es", c:"SALVACIÓN Y REDENCIÓN", sc:"Salvación y redención", l:""},
+                 {n:306, t:"Llegó Jesús", c:"SALVACIÓN Y REDENCIÓN", sc:"Salvación y redención", l:""},
+                 {n:307, t:"Roca de la eternidad", c:"SALVACIÓN Y REDENCIÓN", sc:"Salvación y redención", l:""},
+                 {n:308, t:"Dios descendió", c:"SALVACIÓN Y REDENCIÓN", sc:"Salvación y redención", l:""},
+                 {n:309, t:"La voz de Jesús", c:"SALVACIÓN Y REDENCIÓN", sc:"Salvación y redención", l:""},
+                 {n:310, t:"Cristo, centro de mi vida", c:"SALVACIÓN Y REDENCIÓN", sc:"Salvación y redención", l:""},
+                 {n:311, t:"Cuando junte Jesús las naciones", c:"JUICIO", sc:"Juicio", l:""},
+                 {n:312, t:"Día grande viene", c:"JUICIO", sc:"Juicio", l:""},
+                 {n:313, t:"La hora del Juicio", c:"JUICIO", sc:"Juicio", l:""},
+                 {n:314, t:"Cristo, Rey Omnipotente", c:"JUICIO", sc:"Juicio", l:""},
+                 {n:315, t:"El Juicio empezó", c:"JUICIO", sc:"Juicio", l:""},
+                 {n:316, t:"Hay un mundo feliz más allá", c:"HOGAR CELESTIAL", sc:"Hogar celestial", l:""},
+                 {n:317, t:"En el hogar do nunca habrá", c:"HOGAR CELESTIAL", sc:"Hogar celestial", l:""},
+                 {n:318, t:"En la mansión de mi Señor", c:"HOGAR CELESTIAL", sc:"Hogar celestial", l:""},
+                 {n:319, t:"Cuando mi lucha termine al final", c:"HOGAR CELESTIAL", sc:"Hogar celestial", l:""},
+                 {n:320, t:"Jamás se dice 'adiós' allá", c:"HOGAR CELESTIAL", sc:"Hogar celestial", l:""},
+                 {n:321, t:"Allá sobre montes", c:"HOGAR CELESTIAL", sc:"Hogar celestial", l:""},
+                 {n:322, t:"Busquemos la patria", c:"HOGAR CELESTIAL", sc:"Hogar celestial", l:""},
+                 {n:323, t:"He de conocerle entonces", c:"HOGAR CELESTIAL", sc:"Hogar celestial", l:""},
+                 {n:324, t:"Pronto yo veré a Jesús", c:"HOGAR CELESTIAL", sc:"Hogar celestial", l:""},
+                 {n:325, t:"No puede el mundo ser mi hogar", c:"HOGAR CELESTIAL", sc:"Hogar celestial", l:""},
+                 {n:326, t:"Un día yo he de faltar", c:"HOGAR CELESTIAL", sc:"Hogar celestial", l:""},
+                 {n:327, t:"Jerusalén, mi amado hogar", c:"HOGAR CELESTIAL", sc:"Hogar celestial", l:""},
+                 {n:328, t:"¿Nos veremos junto al río?", c:"HOGAR CELESTIAL", sc:"Hogar celestial", l:""},
+                 {n:329, t:"En la célica morada", c:"HOGAR CELESTIAL", sc:"Hogar celestial", l:""},
+                 {n:330, t:"Hay un feliz Edén", c:"HOGAR CELESTIAL", sc:"Hogar celestial", l:""},
+                 {n:331, t:"La mañana gloriosa", c:"HOGAR CELESTIAL", sc:"Hogar celestial", l:""},
+                 {n:332, t:"En la tierra adonde iré", c:"HOGAR CELESTIAL", sc:"Hogar celestial", l:""},
+                 {n:333, t:"Aunque en esta vida", c:"HOGAR CELESTIAL", sc:"Hogar celestial", l:""},
+                 {n:334, t:"Cuánto anhelo llegar", c:"HOGAR CELESTIAL", sc:"Hogar celestial", l:""},
+                 {n:335, t:"Mi hogar celestial", c:"HOGAR CELESTIAL", sc:"Hogar celestial", l:""},
+                 {n:336, t:"Del bello país he leído", c:"HOGAR CELESTIAL", sc:"Hogar celestial", l:""},
+                 {n:337, t:"Nunca más adiós", c:"HOGAR CELESTIAL", sc:"Hogar celestial", l:""},
+                 {n:338, t:"Las riberas de dicha inmortal", c:"HOGAR CELESTIAL", sc:"Hogar celestial", l:""},
+                 {n:339, t:"A veces oigo un himno", c:"HOGAR CELESTIAL", sc:"Hogar celestial", l:""},
+                 {n:340, t:"¡Oh, qué música divina!", c:"HOGAR CELESTIAL", sc:"Hogar celestial", l:""},
+                 {n:341, t:"Más cerca del hogar", c:"HOGAR CELESTIAL", sc:"Hogar celestial", l:""},
+                 {n:342, t:"Después del río", c:"HOGAR CELESTIAL", sc:"Hogar celestial", l:""},
+                 {n:343, t:"Quiero llegar a ser parte del cielo", c:"HOGAR CELESTIAL", sc:"Hogar celestial", l:""},
+                 {n:344, t:"Entonad un himno", c:"HOGAR CELESTIAL", sc:"Hogar celestial", l:""},
+                 {n:345, t:"Canta y tus penas se irán", c:"LA VIDA CRISTIANA", sc:"Gozo y paz", l:""},
+                 {n:346, t:"¡Feliz el día!", c:"LA VIDA CRISTIANA", sc:"Gozo y paz", l:""},
+                 {n:347, t:"Con gozo canto al Señor", c:"LA VIDA CRISTIANA", sc:"Gozo y paz", l:""},
+                 {n:348, t:"Dicha grande", c:"LA VIDA CRISTIANA", sc:"Gozo y paz", l:""},
+                 {n:349, t:"Gran gozo hay en mi alma hoy", c:"LA VIDA CRISTIANA", sc:"Gozo y paz", l:""},
+                 {n:350, t:"Andando en la luz de Dios", c:"LA VIDA CRISTIANA", sc:"Gozo y paz", l:""},
+                 {n:351, t:"Yo tengo gozo", c:"LA VIDA CRISTIANA", sc:"Gozo y paz", l:""},
+                 {n:352, t:"Gozaos, Cristo es Rey", c:"LA VIDA CRISTIANA", sc:"Gozo y paz", l:""},
+                 {n:353, t:"Suenan melodías en mi ser", c:"LA VIDA CRISTIANA", sc:"Gozo y paz", l:""},
+                 {n:354, t:"Voy caminando", c:"LA VIDA CRISTIANA", sc:"Gozo y paz", l:""},
+                 {n:355, t:"Yo voy feliz", c:"LA VIDA CRISTIANA", sc:"Gozo y paz", l:""},
+                 {n:356, t:"Gozo es conocer a Cristo", c:"LA VIDA CRISTIANA", sc:"Gozo y paz", l:""},
+                 {n:357, t:"Jesús, tú eres mi alegría", c:"LA VIDA CRISTIANA", sc:"Gozo y paz", l:""},
+                 {n:358, t:"En el seno de mi alma", c:"LA VIDA CRISTIANA", sc:"Gozo y paz", l:""},
+                 {n:359, t:"Regocijaos siempre", c:"LA VIDA CRISTIANA", sc:"Gozo y paz", l:""},
+                 {n:360, t:"En Jesucristo, mártir de paz", c:"LA VIDA CRISTIANA", sc:"Gozo y paz", l:""},
+                 {n:361, t:"Percibe mi alma un son", c:"LA VIDA CRISTIANA", sc:"Gozo y paz", l:""},
+                 {n:362, t:"Con sin igual amor", c:"LA VIDA CRISTIANA", sc:"Gozo y paz", l:""},
+                 {n:363, t:"Hay un canto nuevo en mi ser", c:"LA VIDA CRISTIANA", sc:"Gozo y paz", l:""},
+                 {n:364, t:"Jesús da paz", c:"LA VIDA CRISTIANA", sc:"Gozo y paz", l:""},
+                 {n:365, t:"Elevemos al Señor", c:"GRATITUD", sc:"Gratitud", l:""},
+                 {n:366, t:"En Cristo hallo amigo", c:"GRATITUD", sc:"Gratitud", l:""},
+                 {n:367, t:"Gracias, Dios", c:"GRATITUD", sc:"Gratitud", l:""},
+                 {n:368, t:"Padre amado", c:"GRATITUD", sc:"Gratitud", l:""},
+                 {n:369, t:"Gratitud y alabanza", c:"GRATITUD", sc:"Gratitud", l:""},
+                 {n:370, t:"Por la excelsa majestad", c:"GRATITUD", sc:"Gratitud", l:""},
+                 {n:371, t:"Jesús te ama", c:"GRATITUD", sc:"Gratitud", l:""},
+                 {n:372, t:"¿Cómo agradecer?", c:"GRATITUD", sc:"Gratitud", l:""},
+                 {n:373, t:"Mi Redentor es Cristo", c:"ORACIÓN Y COMUNIÓN", sc:"Oración y comunión", l:""},
+                 {n:374, t:"Dulce comunión", c:"ORACIÓN Y COMUNIÓN", sc:"Oración y comunión", l:""},
+                 {n:375, t:"Sed puros y santos", c:"ORACIÓN Y COMUNIÓN", sc:"Oración y comunión", l:""},
+                 {n:376, t:"Dulce oración", c:"ORACIÓN Y COMUNIÓN", sc:"Oración y comunión", l:""},
+                 {n:377, t:"A los pies de Jesucristo", c:"ORACIÓN Y COMUNIÓN", sc:"Oración y comunión", l:""},
+                 {n:378, t:"¡Oh, qué amigo nos es Cristo!", c:"ORACIÓN Y COMUNIÓN", sc:"Oración y comunión", l:""},
+                 {n:379, t:"Habla, Señor, a mi alma", c:"ORACIÓN Y COMUNIÓN", sc:"Oración y comunión", l:""},
+                 {n:380, t:"Ando con Cristo", c:"ORACIÓN Y COMUNIÓN", sc:"Oración y comunión", l:""},
+                 {n:381, t:"De mañana veo su faz", c:"ORACIÓN Y COMUNIÓN", sc:"Oración y comunión", l:""},
+                 {n:382, t:"A solas al huerto yo voy", c:"ORACIÓN Y COMUNIÓN", sc:"Oración y comunión", l:""},
+                 {n:383, t:"Habla a tu Dios de mañana", c:"ORACIÓN Y COMUNIÓN", sc:"Oración y comunión", l:""},
+                 {n:384, t:"El jardín de oración", c:"ORACIÓN Y COMUNIÓN", sc:"Oración y comunión", l:""},
+                 {n:385, t:"Hablando con Jesús", c:"ORACIÓN Y COMUNIÓN", sc:"Oración y comunión", l:""},
+                 {n:386, t:"Hay un lugar de paz", c:"ORACIÓN Y COMUNIÓN", sc:"Oración y comunión", l:""},
+                 {n:387, t:"Aparte del mundo", c:"ORACIÓN Y COMUNIÓN", sc:"Oración y comunión", l:""},
+                 {n:388, t:"Debo decir a Cristo", c:"ORACIÓN Y COMUNIÓN", sc:"Oración y comunión", l:""},
+                 {n:389, t:"Conversar con Jesucristo", c:"ORACIÓN Y COMUNIÓN", sc:"Oración y comunión", l:""},
+                 {n:390, t:"Soy yo, Señor", c:"ORACIÓN Y COMUNIÓN", sc:"Oración y comunión", l:""},
+                 {n:391, t:"¿Le importará a Jesús?", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:392, t:"Hay quien vela mis pisadas", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:393, t:"Mi fe contempla a ti", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:394, t:"¡Cuán firme cimiento!", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:395, t:"¡Oh, cuán dulce es fiar en Cristo!", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:396, t:"¡Oh qué Salvador!", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:397, t:"Oh buen Señor, velada está", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:398, t:"Cuando sopla airada la tempestad", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:399, t:"En estos tiempos", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:400, t:"Castillo fuerte es nuestro Dios", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:401, t:"Eterna Roca es mi Jesús", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:402, t:"¡Oh!, salvo en la Roca", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:403, t:"Cuando en la lucha", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:404, t:"A cualquiera parte", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:405, t:"Sé quién es Jesús", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:406, t:"Jesús es mi luz", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:407, t:"Muy cerca de mi Redentor", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:408, t:"Cristo me ayuda por él a vivir", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:409, t:"Si mi débil fe flaqueare", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:410, t:"Cuando te quiero", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:411, t:"Bajo sus alas", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:412, t:"Todas las promesas", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:413, t:"Si la carga es pesada", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:414, t:"¡Oh, buen Maestro, despierta!", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:415, t:"Salvo en los tiernos brazos", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:416, t:"¡Oh!, tenga yo la ardiente fe", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:417, t:"Dame la fe de mi Jesús", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:418, t:"Padre, yo vengo a ti", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:419, t:"Por la justicia de Jesús", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:420, t:"Nunca desmayes", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:421, t:"Cariñoso Salvador", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:422, t:"Nada puede ya faltarme", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:423, t:"Pertenezco a mi Rey", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:424, t:"¿Cómo podré estar triste?", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:425, t:"Día en día", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:426, t:"Tengo paz", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:427, t:"Lleva todo tu pesar a Cristo", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:428, t:"Su oveja soy", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:429, t:"Él puede", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:430, t:"Solo no estoy", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:431, t:"A él mis problemas le doy", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:432, t:"Como el ciervo", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:433, t:"Conmigo marcha un ángel", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:434, t:"Jesús es mi vida", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:435, t:"Dios sabe, Dios oye, Dios ve", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:436, t:"Él vive hoy", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:437, t:"Tu presencia, Padre amado, da consuelo", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:438, t:"Mira hacia Dios", c:"CONFIANZA Y SEGURIDAD", sc:"Confianza y seguridad", l:""},
+                 {n:451, t:"Cerca, más cerca", c:"PETICIÓN Y ANHELO", sc:"Petición y anhelo", l:""},
+                 {n:456, t:"Como la mujer de junto al pozo", c:"PETICIÓN Y ANHELO", sc:"Petición y anhelo", l:""},
+                 {n:461, t:"A tu lado anhelo estar", c:"PETICIÓN Y ANHELO", sc:"Petición y anhelo", l:""},
+                {n:439, t:"¡Oh!, quién pudiera andar con Dios", c:"PETICIÓN Y ANHELO", sc:"Petición y anhelo", l:"Letra del himno..."},
+                 {n:440, t:"Quiero, Jesús, contigo andar", c:"PETICIÓN Y ANHELO", sc:"Petición y anhelo", l:"Letra del himno..."},
+                 {n:441, t:"Jesús, te necesito", c:"PETICIÓN Y ANHELO", sc:"Petición y anhelo", l:"Letra del himno..."},
+                 {n:442, t:"¡Oh! ¡Maestro y Salvador!", c:"PETICIÓN Y ANHELO", sc:"Petición y anhelo", l:"Letra del himno..."},
+                 {n:443, t:"Hay un lugar do quiero estar, cerca de ti", c:"PETICIÓN Y ANHELO", sc:"Petición y anhelo", l:"Letra del himno..."},
+                 {n:444, t:"No me pases", c:"PETICIÓN Y ANHELO", sc:"Petición y anhelo", l:"Letra del himno..."},
+                 {n:445, t:"Más de Jesús", c:"PETICIÓN Y ANHELO", sc:"Petición y anhelo", l:"Letra del himno..."},
+                 {n:446, t:"Más cerca, oh Dios, de ti", c:"PETICIÓN Y ANHELO", sc:"Petición y anhelo", l:"Letra del himno..."},
+                 {n:447, t:"Más santidad dame", c:"PETICIÓN Y ANHELO", sc:"Petición y anhelo", l:"Letra del himno..."},
+                 {n:448, t:"Salvador, mi bien eterno", c:"PETICIÓN Y ANHELO", sc:"Petición y anhelo", l:"Letra del himno..."},
+                 {n:449, t:"Cristo, mi piloto sé", c:"PETICIÓN Y ANHELO", sc:"Petición y anhelo", l:"Letra del himno..."},
+                 {n:450, t:"¡Oh Jesús, Pastor divino!", c:"PETICIÓN Y ANHELO", sc:"Petición y anhelo", l:"Letra del himno..."},
+                 {n:452, t:"Contigo quiero andar", c:"PETICIÓN Y ANHELO", sc:"Petición y anhelo", l:"Letra del himno..."},
+                 {n:453, t:"Cómo ser cual Cristo", c:"PETICIÓN Y ANHELO", sc:"Petición y anhelo", l:"Letra del himno..."},
+                 {n:454, t:"Yo quisiera andar con Cristo", c:"PETICIÓN Y ANHELO", sc:"Petición y anhelo", l:"Letra del himno..."},
+                 {n:455, t:"Mi mano ten", c:"PETICIÓN Y ANHELO", sc:"Petición y anhelo", l:"Letra del himno..."},
+                 {n:457, t:"More en mí la belleza del Salvador", c:"PETICIÓN Y ANHELO", sc:"Petición y anhelo", l:"Letra del himno..."},
+                 {n:458, t:"Orad por mí", c:"PETICIÓN Y ANHELO", sc:"Petición y anhelo", l:"Letra del himno..."},
+                 {n:459, t:"Háblame más de Cristo", c:"PETICIÓN Y ANHELO", sc:"Petición y anhelo", l:"Letra del himno..."},
+                 {n:460, t:"Quiero estar cerca de Cristo", c:"PETICIÓN Y ANHELO", sc:"Petición y anhelo", l:"Letra del himno..."},
+                 {n:462, t:"Dame a Cristo", c:"PETICIÓN Y ANHELO", sc:"Petición y anhelo", l:"Letra del himno..."},
+                 {n:463, t:"Mi oración", c:"PETICIÓN Y ANHELO", sc:"Petición y anhelo", l:"Letra del himno..."},
+                 {n:464, t:"Ven, inspíranos", c:"PETICIÓN Y ANHELO", sc:"Petición y anhelo", l:"Letra del himno..."},
+                 {n:465, t:"Ven junto a mí", c:"PETICIÓN Y ANHELO", sc:"Petición y anhelo", l:"Letra del himno..."},
+                 {n:466, t:"Guíame, ¡oh Salvador!", c:"DIRECCIÓN DIVINA", sc:"Dirección divina", l:"Letra del himno..."},
+                 {n:467, t:"¡Siempre el Salvador conmigo!", c:"DIRECCIÓN DIVINA", sc:"Dirección divina", l:"Letra del himno..."},
+                 {n:468, t:"Paso a paso Dios me guía", c:"DIRECCIÓN DIVINA", sc:"Dirección divina", l:"Letra del himno..."},
+                 {n:469, t:"Jesús me guía", c:"DIRECCIÓN DIVINA", sc:"Dirección divina", l:"Letra del himno..."},
+                 {n:470, t:"Guíame, Dios", c:"DIRECCIÓN DIVINA", sc:"Dirección divina", l:"Letra del himno..."},
+                 {n:471, t:"Condúceme, Maestro", c:"DIRECCIÓN DIVINA", sc:"Dirección divina", l:"Letra del himno..."},
+                 {n:472, t:"Jesús, mi guía es", c:"DIRECCIÓN DIVINA", sc:"Dirección divina", l:"Letra del himno..."},
+                 {n:473, t:"Háblame, y hablaré", c:"DIRECCIÓN DIVINA", sc:"Dirección divina", l:"Letra del himno..."},
+                 {n:474, t:"¿Qué me importan?", c:"PEREGRINACIÓN", sc:"Peregrinación", l:"Letra del himno..."},
+                 {n:475, t:"El camino es escabroso", c:"PEREGRINACIÓN", sc:"Peregrinación", l:"Letra del himno..."},
+                 {n:476, t:"¿Muy lejos el hogar está?", c:"PEREGRINACIÓN", sc:"Peregrinación", l:"Letra del himno..."},
+                 {n:477, t:"Los que aman al Señor", c:"PEREGRINACIÓN", sc:"Peregrinación", l:"Letra del himno..."},
+                 {n:478, t:"Sé fiel siempre, hermano", c:"PEREGRINACIÓN", sc:"Peregrinación", l:"Letra del himno..."},
+                 {n:479, t:"De la mano, Señor", c:"PEREGRINACIÓN", sc:"Peregrinación", l:"Letra del himno..."},
+                 {n:480, t:"Digno eres, oh Señor", c:"PEREGRINACIÓN", sc:"Peregrinación", l:"Letra del himno..."},
+                 {n:481, t:"Voy al cielo", c:"PEREGRINACIÓN", sc:"Peregrinación", l:"Letra del himno..."},
+                 {n:482, t:"Quiero cantar", c:"PEREGRINACIÓN", sc:"Peregrinación", l:"Letra del himno..."},
+                 {n:483, t:"Cuando al cielo lleguemos", c:"PEREGRINACIÓN", sc:"Peregrinación", l:"Letra del himno..."},
+                 {n:484, t:"Busca al Señor", c:"PEREGRINACIÓN", sc:"Peregrinación", l:"Letra del himno..."},
+                 {n:485, t:"Unidos en verdad", c:"PEREGRINACIÓN", sc:"Peregrinación", l:"Letra del himno..."},
+                 {n:486, t:"En los pasos de Jesús", c:"PEREGRINACIÓN", sc:"Peregrinación", l:"Letra del himno..."},
+                 {n:487, t:"Cristo, eres justo Rey", c:"OBEDIENCIA", sc:"Obediencia", l:"Letra del himno..."},
+                 {n:488, t:"Al andar con Jesús", c:"OBEDIENCIA", sc:"Obediencia", l:"Letra del himno..."},
+                 {n:489, t:"Solo anhelo, Cristo amado", c:"OBEDIENCIA", sc:"Obediencia", l:"Letra del himno..."},
+                 {n:490, t:"Mejor que los sacrificios", c:"OBEDIENCIA", sc:"Obediencia", l:"Letra del himno..."},
+                 {n:491, t:"Levántate, cristiano", c:"SERVICIO CRISTIANO", sc:"Servicio cristiano", l:"Letra del himno..."},
+                 {n:492, t:"¡Trabajad! ¡Trabajad!", c:"SERVICIO CRISTIANO", sc:"Servicio cristiano", l:"Letra del himno..."},
+                 {n:493, t:"Hoy quiero trabajar contigo", c:"SERVICIO CRISTIANO", sc:"Servicio cristiano", l:"Letra del himno..."},
+                 {n:494, t:"Cerca un alma agobiada está", c:"SERVICIO CRISTIANO", sc:"Servicio cristiano", l:"Letra del himno..."},
+                 {n:495, t:"Mi deber", c:"SERVICIO CRISTIANO", sc:"Servicio cristiano", l:"Letra del himno..."},
+                 {n:496, t:"Sus manos somos", c:"SERVICIO CRISTIANO", sc:"Servicio cristiano", l:"Letra del himno..."},
+                 {n:497, t:"Manos", c:"SERVICIO CRISTIANO", sc:"Servicio cristiano", l:"Letra del himno..."},
+                 {n:498, t:"Puedes demostrar con tus manos", c:"SERVICIO CRISTIANO", sc:"Servicio cristiano", l:"Letra del himno..."},
+                 {n:499, t:"Jesús anduvo por aquí", c:"SERVICIO CRISTIANO", sc:"Servicio cristiano", l:"Letra del himno..."},
+                 {n:500, t:"Hazme tu siervo", c:"SERVICIO CRISTIANO", sc:"Servicio cristiano", l:"Letra del himno..."},
+                 {n:501, t:"Mi vida al servicio de Dios", c:"SERVICIO CRISTIANO", sc:"Servicio cristiano", l:"Letra del himno..."},
+                 {n:502, t:"Brilla en el sitio donde estés", c:"SERVICIO CRISTIANO", sc:"Servicio cristiano", l:"Letra del himno..."},
+                 {n:503, t:"Oh Dios, que deseas la vida", c:"SERVICIO CRISTIANO", sc:"Servicio cristiano", l:"Letra del himno..."},
+                 {n:504, t:"Señor de todos", c:"SERVICIO CRISTIANO", sc:"Servicio cristiano", l:"Letra del himno..."},
+                 {n:505, t:"Hijo del reino", c:"LUCHA CONTRA EL MAL", sc:"Lucha contra el mal", l:"Letra del himno..."},
+                 {n:506, t:"¡De pie, de pie, cristianos!", c:"LUCHA CONTRA EL MAL", sc:"Lucha contra el mal", l:"Letra del himno..."},
+                 {n:507, t:"Tentado, no cedas", c:"LUCHA CONTRA EL MAL", sc:"Lucha contra el mal", l:"Letra del himno..."},
+                 {n:508, t:"Contendamos siempre por nuestra fe", c:"LUCHA CONTRA EL MAL", sc:"Lucha contra el mal", l:"Letra del himno..."},
+                 {n:509, t:"¡Firmes! ¡Fuertes!", c:"LUCHA CONTRA EL MAL", sc:"Lucha contra el mal", l:"Letra del himno..."},
+                 {n:510, t:"¿Quién está por Cristo?", c:"LUCHA CONTRA EL MAL", sc:"Lucha contra el mal", l:"Letra del himno..."},
+                 {n:511, t:"Marcharé en la divina luz", c:"LUCHA CONTRA EL MAL", sc:"Lucha contra el mal", l:"Letra del himno..."},
+                 {n:512, t:"Nunca estéis desanimados", c:"LUCHA CONTRA EL MAL", sc:"Lucha contra el mal", l:"Letra del himno..."},
+                 {n:513, t:"Honra al hombre de valor", c:"LUCHA CONTRA EL MAL", sc:"Lucha contra el mal", l:"Letra del himno..."},
+                 {n:514, t:"¡Despertad, despertad, oh cristianos!", c:"LUCHA CONTRA EL MAL", sc:"Lucha contra el mal", l:"Letra del himno..."},
+                 {n:515, t:"Despliegue el cristiano su santa bandera", c:"LUCHA CONTRA EL MAL", sc:"Lucha contra el mal", l:"Letra del himno..."},
+                 {n:516, t:"¡Firmes y adelante!", c:"LUCHA CONTRA EL MAL", sc:"Lucha contra el mal", l:"Letra del himno..."},
+                 {n:517, t:"De pie, oh grey de Dios", c:"LUCHA CONTRA EL MAL", sc:"Lucha contra el mal", l:"Letra del himno..."},
+                 {n:518, t:"Jesús está buscando voluntarios hoy", c:"LUCHA CONTRA EL MAL", sc:"Lucha contra el mal", l:"Letra del himno..."},
+                 {n:519, t:"Despierta, hermano, sin demorar", c:"LUCHA CONTRA EL MAL", sc:"Lucha contra el mal", l:"Letra del himno..."},
+                 {n:520, t:"¡Adelante! manda el Señor", c:"LUCHA CONTRA EL MAL", sc:"Lucha contra el mal", l:"Letra del himno..."},
+                 {n:526, t:"Oh, mi patria, te prometo hoy", c:"AMOR A LA PATRIA", sc:"Amor a la patria", l:"Letra del himno..."},
+                 {n:527, t:"Señor Jehová, omnipotente Dios", c:"AMOR A LA PATRIA", sc:"Amor a la patria", l:"Letra del himno..."},
+                 {n:528, t:"Por montañas, muy cansado", c:"LA IGLESIA", sc:"Iglesia", l:"Letra del himno..."},
+                 {n:529, t:"Iglesia de Cristo", c:"LA IGLESIA", sc:"Iglesia", l:"Letra del himno..."},
+                 {n:530, t:"Somos un pequeño pueblo muy feliz", c:"LA IGLESIA", sc:"Iglesia", l:"Letra del himno..."},
+                 {n:531, t:"La familia de Dios", c:"LA IGLESIA", sc:"Iglesia", l:"Letra del himno..."},
+                 {n:532, t:"Sagrado es el amor", c:"LA IGLESIA", sc:"Iglesia", l:"Letra del himno..."},
+                 {n:533, t:"Cuán bueno y agradable", c:"LA IGLESIA", sc:"Iglesia", l:"Letra del himno..."},
+                 {n:534, t:"En tu nombre comenzamos", c:"ESCUELA SABÁTICA", sc:"Escuela Sabática", l:"Letra del himno..."},
+                 {n:535, t:"Las faenas terminadas", c:"SÁBADO", sc:"Sábado", l:"Letra del himno..."},
+                 {n:536, t:"En sombras de la tarde", c:"SÁBADO", sc:"Sábado", l:"Letra del himno..."},
+                 {n:537, t:"Sábado santo", c:"SÁBADO", sc:"Sábado", l:"Letra del himno..."},
+                 {n:538, t:"Hoy es día de reposo", c:"SÁBADO", sc:"Sábado", l:"Letra del himno..."},
+                 {n:539, t:"¡Oh, día delicioso!", c:"SÁBADO", sc:"Sábado", l:"Letra del himno..."},
+                 {n:540, t:"Ya asoma el sol brillante", c:"SÁBADO", sc:"Sábado", l:"Letra del himno..."},
+                 {n:541, t:"Señor, reposamos", c:"SÁBADO", sc:"Sábado", l:"Letra del himno..."},
+                 {n:542, t:"Amo tu sábado", c:"SÁBADO", sc:"Sábado", l:"Letra del himno..."},
+                 {n:543, t:"No te olvides nunca del día del Señor", c:"SÁBADO", sc:"Sábado", l:"Letra del himno..."},
+                 {n:544, t:"Hoy el sábado glorioso", c:"SÁBADO", sc:"Sábado", l:"Letra del himno..."},
+                 {n:545, t:"Santo día", c:"SÁBADO", sc:"Sábado", l:"Letra del himno..."},
+                 {n:546, t:"Santo sábado, bendito", c:"SÁBADO", sc:"Sábado", l:"Letra del himno..."},
+                 {n:547, t:"Sábado es", c:"SÁBADO", sc:"Sábado", l:"Letra del himno..."},
+                 {n:548, t:"Mi corazón se llena de alegría", c:"SÁBADO", sc:"Sábado", l:"Letra del himno..."},
+                 {n:549, t:"Ya el fin se acerca", c:"SÁBADO", sc:"Sábado", l:"Letra del himno..."},
+                 {n:550, t:"Día santo del Señor", c:"SÁBADO", sc:"Sábado", l:"Letra del himno..."},
+                 {n:551, t:"Embajador soy de mi Rey", c:"MISIÓN DE LA IGLESIA", sc:"Misión de la iglesia", l:"Letra del himno..."},
+                 {n:552, t:"¡Oh!, cuánto necesita", c:"MISIÓN DE LA IGLESIA", sc:"Misión de la iglesia", l:"Letra del himno..."},
+                 {n:553, t:"¿Os pusisteis a arar?", c:"MISIÓN DE LA IGLESIA", sc:"Misión de la iglesia", l:"Letra del himno..."},
+                 {n:554, t:"Con Cristo avanza hoy", c:"MISIÓN DE LA IGLESIA", sc:"Misión de la iglesia", l:"Letra del himno..."},
+                 {n:555, t:"Hoy gozoso medito", c:"MISIÓN DE LA IGLESIA", sc:"Misión de la iglesia", l:"Letra del himno..."},
+                 {n:556, t:"Yo quiero siempre brillar", c:"MISIÓN DE LA IGLESIA", sc:"Misión de la iglesia", l:"Letra del himno..."},
+                 {n:557, t:"¿Qué estás haciendo por Cristo?", c:"MISIÓN DE LA IGLESIA", sc:"Misión de la iglesia", l:"Letra del himno..."},
+                 {n:558, t:"Ama a tus prójimos", c:"MISIÓN DE LA IGLESIA", sc:"Misión de la iglesia", l:"Letra del himno..."},
+                 {n:559, t:"No te dé temor", c:"MISIÓN DE LA IGLESIA", sc:"Misión de la iglesia", l:"Letra del himno..."},
+                 {n:560, t:"Cristo está buscando obreros", c:"MISIÓN DE LA IGLESIA", sc:"Misión de la iglesia", l:"Letra del himno..."},
+                 {n:561, t:"Oigo del Señor la voz llamando", c:"MISIÓN DE LA IGLESIA", sc:"Misión de la iglesia", l:"Letra del himno..."},
+                 {n:562, t:"Esparcid la luz de Cristo", c:"MISIÓN DE LA IGLESIA", sc:"Misión de la iglesia", l:"Letra del himno..."},
+                 {n:563, t:"Escuchad, Jesús nos dice", c:"MISIÓN DE LA IGLESIA", sc:"Misión de la iglesia", l:"Letra del himno..."},
+                 {n:564, t:"Pronto la noche viene", c:"MISIÓN DE LA IGLESIA", sc:"Misión de la iglesia", l:"Letra del himno..."},
+                 {n:565, t:"¡Ve, ve oh Sion!", c:"MISIÓN DE LA IGLESIA", sc:"Misión de la iglesia", l:"Letra del himno..."},
+                 {n:566, t:"Centinelas del Maestro", c:"MISIÓN DE LA IGLESIA", sc:"Misión de la iglesia", l:"Letra del himno..."},
+                 {n:567, t:"Si en valles de peligros", c:"MISIÓN DE LA IGLESIA", sc:"Misión de la iglesia", l:"Letra del himno..."},
+                 {n:568, t:"Hay lugar en la amplia viña", c:"MISIÓN DE LA IGLESIA", sc:"Misión de la iglesia", l:"Letra del himno..."},
+                 {n:569, t:"Id y predicad el evangelio", c:"MISIÓN DE LA IGLESIA", sc:"Misión de la iglesia", l:"Letra del himno..."},
+                 {n:570, t:"Voluntario del Señor", c:"MISIÓN DE LA IGLESIA", sc:"Misión de la iglesia", l:"Letra del himno..."},
+                 {n:571, t:"La historia de Cristo contemos", c:"MISIÓN DE LA IGLESIA", sc:"Misión de la iglesia", l:"Letra del himno..."},
+                 {n:572, t:"Pescadores de hombres", c:"MISIÓN DE LA IGLESIA", sc:"Misión de la iglesia", l:"Letra del himno..."},
+                 {n:573, t:"Te envío a ti", c:"MISIÓN DE LA IGLESIA", sc:"Misión de la iglesia", l:"Letra del himno..."},
+                 {n:574, t:"Testimonio", c:"MISIÓN DE LA IGLESIA", sc:"Misión de la iglesia", l:"Letra del himno..."},
+                 {n:575, t:"Tocad trompeta ya", c:"MISIÓN DE LA IGLESIA", sc:"Misión de la iglesia", l:"Letra del himno..."},
+                 {n:576, t:"Proclamo hoy que soy cristiano", c:"MISIÓN DE LA IGLESIA", sc:"Misión de la iglesia", l:"Letra del himno..."},
+                 {n:577, t:"Yo quiero trabajar", c:"MISIÓN DE LA IGLESIA", sc:"Misión de la iglesia", l:"Letra del himno..."},
+                 {n:578, t:"El pueblo que conoce a su Dios", c:"MISIÓN DE LA IGLESIA", sc:"Misión de la iglesia", l:"Letra del himno..."},
+                 {n:579, t:"La fuente veo", c:"BAUTISMO", sc:"Bautismo", l:"Letra del himno..."},
+                 {n:580, t:"Las aguas del bautismo", c:"BAUTISMO", sc:"Bautismo", l:"Letra del himno..."},
+                 {n:581, t:"El Pan de vida soy", c:"CENA DEL SEÑOR", sc:"Cena del Señor", l:"Letra del himno..."},
+                 {n:582, t:"Hoy venimos cual hermanos", c:"CENA DEL SEÑOR", sc:"Cena del Señor", l:"Letra del himno..."},
+                 {n:583, t:"La Cena de la Comunión", c:"CENA DEL SEÑOR", sc:"Cena del Señor", l:"Letra del himno..."},
+                 {n:584, t:"Amémonos, hermanos", c:"CENA DEL SEÑOR", sc:"Cena del Señor", l:"Letra del himno..."},
+                 {n:585, t:"De rodillas partimos hoy el pan", c:"CENA DEL SEÑOR", sc:"Cena del Señor", l:"Letra del himno..."},
+                 {n:586, t:"En memoria de mí", c:"CENA DEL SEÑOR", sc:"Cena del Señor", l:"Letra del himno..."},
+                 {n:587, t:"Te dedicamos, oh Señor", c:"DEDICACIÓN DE UN TEMPLO", sc:"Dedicación de un templo", l:"Letra del himno..."},
+                 {n:588, t:"Ven, alma que lloras", c:"FUNERAL", sc:"Funeral", l:"Letra del himno..."},
+                 {n:589, t:"Perfecto amor", c:"EL HOGAR CRISTIANO", sc:"Boda", l:"Letra del himno..."},
+                 {n:590, t:"Guía a ti, Señor", c:"EL HOGAR CRISTIANO", sc:"Hogar cristiano", l:"Letra del himno..."},
+                 {n:591, t:"Todo es bello en el hogar", c:"EL HOGAR CRISTIANO", sc:"Hogar cristiano", l:"Letra del himno..."},
+                 {n:592, t:"Si Dios está, ¡feliz hogar!", c:"EL HOGAR CRISTIANO", sc:"Hogar cristiano", l:"Letra del himno..."},
+                 {n:593, t:"Hogar de mis recuerdos", c:"EL HOGAR CRISTIANO", sc:"Hogar cristiano", l:"Letra del himno..."},
+                 {n:594, t:"Señor, gracias por mi hogar", c:"EL HOGAR CRISTIANO", sc:"Hogar cristiano", l:"Letra del himno..."},
+                 {n:595, t:"Feliz hogar", c:"EL HOGAR CRISTIANO", sc:"Hogar cristiano", l:"Letra del himno..."},
+                 {n:596, t:"Edificamos familias", c:"EL HOGAR CRISTIANO", sc:"Hogar cristiano", l:"Letra del himno..."},
+                 {n:597, t:"Oración por un niño", c:"DEDICACIÓN DE UN NIÑO", sc:"Dedicación de un niño", l:"Letra del himno..."},
+                 {n:608, t:"Corazones siempre alegres", c:"JÓVENES", sc:"Jóvenes", l:"Letra del himno..."},
+                 {n:609, t:"¡Oh jóvenes, venid!", c:"JÓVENES", sc:"Jóvenes", l:"Letra del himno..."},
+                 {n:610, t:"Escuchamos tu llamada", c:"JÓVENES", sc:"Jóvenes", l:"Letra del himno..."},
+                 {n:611, t:"Oh, juventud del Rey", c:"JÓVENES", sc:"Jóvenes", l:"Letra del himno..."},
+                 {n:612, t:"Jesús te necesita hoy", c:"JÓVENES", sc:"Jóvenes", l:"Letra del himno..."},
+                 {n:613, t:"Hoy nos toca trabajar", c:"JÓVENES", sc:"Jóvenes", l:"Letra del himno..."}
+            ]
+        };
+
+
+
 
         // Auditoría eliminada de raíz
         function registrarAuditoria(accionStr) {
@@ -509,6 +1188,26 @@
         }
 
         function abrirAuditoria() { return; }
+
+        function cargarHimnosDatalist() {
+            let dl = document.createElement('datalist');
+            dl.id = 'lista-himnos';
+            let opciones = "";
+            for (let cat in himnario) {
+                himnario[cat].forEach(h => {
+                    // Integramos la subclasificación en el 'value' para que la barra la encuentre instantáneamente
+                    opciones += `<option value="${h.n} - ${h.t} [${h.sc}]">${h.c}</option>`;
+                });
+            }
+            dl.innerHTML = opciones;
+            document.body.appendChild(dl);
+        }
+
+
+
+
+
+
         function renderAuditoria() { return; }
         function deshacerMovimiento(id) { return; }
 
@@ -1471,6 +2170,34 @@
             document.getElementById('eval-llego').value = llego || 'si';
             document.getElementById('eval-sustituto').value = sustituto || '';
             toggleSustituto();
+
+            // --- Lógica del Pastor de Distrito (Mi Sermón) ---
+            const formSermon = document.getElementById('sermon-form-container');
+            const predData = datosLocales.predicadores_lista.find(x => x.nombre === predicador);
+            const esPastor = predData && (predData.tipo === 'pastor_distrito' || predData.tipo === 'pastor');
+            
+            // Se mostrará el formulario ÚNICAMENTE si tu sesión se llama Pastor de Distrito
+            if (usuarioActual && usuarioActual.nombre === 'Pastor de Distrito' && esPastor) {
+
+
+
+                formSermon.style.display = 'block';
+
+
+
+                let asignacionActual = datosLocales.predicaciones.find(p => p.fecha === fecha && p.iglesia === iglesia);
+                document.getElementById('eval-sermon-titulo').value = asignacionActual && asignacionActual.sermonTitulo ? asignacionActual.sermonTitulo : '';
+                document.getElementById('eval-sermon-cita').value = asignacionActual && asignacionActual.sermonCita ? asignacionActual.sermonCita : '';
+                document.getElementById('eval-himno1').value = asignacionActual && asignacionActual.himno1 ? asignacionActual.himno1 : '';
+                document.getElementById('eval-himno2').value = asignacionActual && asignacionActual.himno2 ? asignacionActual.himno2 : '';
+                document.getElementById('eval-himno3').value = asignacionActual && asignacionActual.himno3 ? asignacionActual.himno3 : '';
+            } else {
+                formSermon.style.display = 'none';
+            }
+            // ------------------------------------------------
+
+
+
             
             clearInterval(evalInterval);
             // La hora límite es a las 12:30 PM de ese día
@@ -1534,6 +2261,19 @@
                 } else {
                     delete datosLocales.predicaciones[indice].sustituto; // Limpiar si lo regresan a "Sí llegó"
                 }
+
+                // --- Guardar Info del Sermón si está visible ---
+                if (document.getElementById('sermon-form-container').style.display === 'block') {
+                    datosLocales.predicaciones[indice].sermonTitulo = document.getElementById('eval-sermon-titulo').value;
+                    datosLocales.predicaciones[indice].sermonCita = document.getElementById('eval-sermon-cita').value;
+                    datosLocales.predicaciones[indice].himno1 = document.getElementById('eval-himno1').value;
+                    datosLocales.predicaciones[indice].himno2 = document.getElementById('eval-himno2').value;
+                    datosLocales.predicaciones[indice].himno3 = document.getElementById('eval-himno3').value;
+                }
+                // -----------------------------------------------
+
+
+
                 saveGist();
                 cerrarEvaluacion();
                 renderCards();
@@ -1647,7 +2387,17 @@
                     let estadoTexto = p.llego === 'no' ? 'falto no llego' : 'asistio si llego';
                     let sustitutoTexto = p.sustituto ? p.sustituto : 'nadie';
                     let fechaCorta = formatearFechaVisual(p.fecha);
-                    let textoCompleto = quitarAcentosExtremo(`${p.fecha} ${fechaCorta} ${p.iglesia} ${estadoTexto} ${sustitutoTexto}`);
+                    let extra = (usuarioActual && usuarioActual.nombre === 'Pastor de Distrito') ? `${p.sermonTitulo || ''} ${p.sermonCita || ''} ${p.himno1 || ''} ${p.himno2 || ''} ${p.himno3 || ''}` : '';
+                    let textoCompleto = quitarAcentosExtremo(`${p.fecha} ${fechaCorta} ${p.iglesia} ${estadoTexto} ${sustitutoTexto} ${extra}`);
+
+
+
+
+
+
+
+
+
                     return terminosHistorial.every(term => textoCompleto.includes(term));
                 });
             }
@@ -1677,6 +2427,23 @@
                     ? `<span style="color:#cc0000; font-weight:bold; font-size:0.8rem;"><i class="fas fa-times-circle"></i> Faltó (Cubrió: ${p.sustituto || 'Nadie'})</span>`
                     : `<span style="color:#28a745; font-weight:bold; font-size:0.8rem;"><i class="fas fa-check-circle"></i> Asistió</span>`;
                 
+                let bloqueSermon = "";
+                if ((p.sermonTitulo || p.sermonCita) && usuarioActual && usuarioActual.nombre === 'Pastor de Distrito') {
+                    bloqueSermon = `
+                        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed #ccc; font-size: 0.85rem; color: #444;">
+
+
+
+
+
+
+
+                            <div style="color:var(--primary); font-weight:bold;"><i class="fas fa-book-open"></i> ${p.sermonTitulo || 'Sin Título'}</div>
+                            <div style="margin-bottom: 4px;"><i class="fas fa-quote-right" style="color:#888;"></i> ${p.sermonCita || '-'}</div>
+                            <div style="font-size: 0.75rem; color:#666;"><i class="fas fa-music"></i> ${p.himno1 || ''} | ${p.himno2 || ''} | ${p.himno3 || ''}</div>
+                        </div>`;
+                }
+
                 let churchData = datosLocales.iglesias.find(ig => ig.nombre === p.iglesia);
                 let churchColor = churchData && churchData.color ? churchData.color : '#2196F3';
                 let churchIcon = churchData && churchData.icono ? churchData.icono : 'fa-church';
@@ -1689,8 +2456,12 @@
                             <span style="font-size:0.75rem; background-color:${churchBg}; color:${churchColor}; border:1px solid ${churchColor}; padding:3px 8px; border-radius:12px; font-weight:bold;"><i class="fas ${churchIcon}"></i> ${p.iglesia}</span>
                         </div>
                         ${status}
+                        ${bloqueSermon}
                     </div>
                 `;
+
+
+
             }).join('');
 
             contenedor.innerHTML = htmlEstadisticas + htmlLista;
@@ -1698,7 +2469,11 @@
 
         // Inicialización y Sincronización (COMPLETA Y CERRADA)
         window.onload = () => {
+            cargarHimnosDatalist();
             calcularProximoSabado();
+
+
+
             
             // Configurar el input de mes por defecto al mes y año actual
             const hoy = new Date();
