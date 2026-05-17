@@ -68,7 +68,58 @@
             100% { box-shadow: 0 0 5px #2196F3; border-left-color: #ccc; } 
         }
         .next-saturday { animation: parpadeoElegante 2s infinite; border: 1px solid #2196F3; }
+        
+        /* Ojos Visibilidad */
+        @keyframes ojoVivo { 0% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.15); filter: brightness(1.2); text-shadow: 0 0 8px #2ecc71; } 100% { transform: scale(1); filter: brightness(1); } }
+        .ojo-on { background: linear-gradient(145deg, #2ecc71, #27ae60); -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: ojoVivo 1.5s ease-in-out infinite; }
+        .ojo-off { color: #95a5a6 !important; opacity: 0.6; }
+
+        /* Grid Agenda Completa */
+
+
+
+        .agenda-completa-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; overflow-y: auto; height: 60vh; }
+        .agenda-completa-header { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: bold; color: #7f8c8d; padding-bottom: 5px; border-bottom: 2px solid #ecf0f1; margin-bottom: 5px; font-size: 0.8rem;}
+        .cal-day-box { border: 1px solid #ecf0f1; border-radius: 6px; padding: 4px; min-height: 80px; display: flex; flex-direction: column; gap: 2px; }
+        .cal-day-box:hover { border-color: #bdc3c7; background-color: #fcfcfc; }
+        .cal-day-num { font-weight: 800; color: #2c3e50; font-size: 0.9rem; margin-bottom: 2px; }
+        .evt-badge { padding: 2px 4px; border-radius: 4px; color: white !important; font-size: 0.65rem; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+        .evt-badge:hover { transform: scale(1.02); }
+        .btn-add-agenda { background: #e67e22; color: white; border: none; padding: 10px 15px; border-radius: 5px; font-weight: bold; width: 100%; margin-top: 10px; display: none; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);}
+
+        /* Grid Agenda Completa */
+        .agenda-completa-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; overflow-y: auto; height: 60vh; }
+        .agenda-completa-header { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: bold; color: #7f8c8d; padding-bottom: 5px; border-bottom: 2px solid #ecf0f1; margin-bottom: 5px; font-size: 0.8rem;}
+        .cal-day-box { border: 1px solid #ecf0f1; border-radius: 6px; padding: 2px; min-height: 40px; display: flex; flex-direction: column; gap: 2px; }
+        .cal-day-box:hover { border-color: #bdc3c7; background-color: #fcfcfc; }
+        .cal-day-num { font-weight: 800; color: #2c3e50; font-size: 0.8rem; margin: 0; text-align: right; padding-right: 3px; }
+        .evt-badge { padding: 2px; border-radius: 4px; color: white !important; font-size: 0.85rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+        .evt-badge:hover { transform: scale(1.05); }
+        .btn-add-agenda { background: #e67e22; color: white; border: none; padding: 10px 15px; border-radius: 5px; font-weight: bold; width: 100%; margin-top: 10px; display: none; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);}
+
+        /* Mini Calendario Popup */
+
+
+
+
+
+
+        #mini-calendar-popup { position: fixed; bottom: -200px; left: 50%; transform: translateX(-50%); background: white; padding: 10px 15px; border-radius: 12px 12px 0 0; box-shadow: 0 -4px 15px rgba(0,0,0,0.25); transition: bottom 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 1050; width: 90%; max-width: 350px; text-align: center; border-top: 4px solid var(--primary); }
+        #mini-calendar-popup.show { bottom: 0; }
+        .mini-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-top: 5px; }
+        .mini-day { font-size: 0.85rem; padding: 5px 0; border-radius: 6px; color: #555; background: #f9f9f9; }
+        .mini-day.header { font-weight: bold; background: transparent; color: #333; font-size: 0.75rem; }
+        .mini-day.active { background: var(--primary); color: white; font-weight: bold; box-shadow: 0 0 8px var(--primary); transform: scale(1.1); z-index: 2; position: relative; }
+        .mini-day.weekend { color: #cc0000; }
+        
+        /* Agenda Distrital en Pantalla Principal */
+        .agenda-card { background: linear-gradient(145deg, #ffffff, #f4f6f9); padding: 12px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 5px solid #ccc; }
+        .agenda-title { font-weight: bold; color: #2c3e50; font-size: 1.05rem; line-height: 1.2; margin-top: 3px; }
+        .agenda-dept { font-size: 0.7rem; color: white; padding: 3px 8px; border-radius: 12px; display: inline-block; font-weight: bold; text-transform: uppercase; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
     </style>
+
+
+
 </head>
 <body>
 
@@ -77,6 +128,8 @@
         <div class="nav-icons">
             <i class="fas fa-sync-alt" onclick="forzarDescargaPublica()" id="btn-sync" title="Actualizar desde la nube"></i>
             <i class="fas fa-calendar-alt" onclick="abrirCalendarioMensual()" id="btn-calendar"></i>
+            <i class="fas fa-calendar-week" onclick="abrirAgendaCompleta()" id="btn-agenda-full" title="Ver Agenda Distrital"></i>
+
             <i class="fas fa-cog" onclick="showScreen('configScreen')" style="display: none;" id="btn-config"></i>
             <i class="fas fa-plus-circle" onclick="abrirFormularioPredicacion()" style="display: none;" id="btn-add"></i>
             <i class="fas fa-sign-in-alt" onclick="showScreen('loginScreen')" id="btn-login"></i>
@@ -98,7 +151,18 @@
             </div>
         </div>
         <div id="lista-tarjetas"></div>
+        
+                <div id="lista-agenda-inferior" style="margin-top: 25px; display: none;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; border-bottom: 2px dashed #bdc3c7; padding-bottom: 5px;">
+                <i class="fas fa-calendar-check text-primary" style="font-size: 1.2rem;"></i>
+                <h4 style="color: #34495e; font-size: 1.1rem; margin: 0; font-weight: 800; text-transform: uppercase;">Agenda Distrital</h4>
+            </div>
+            <div id="contenido-agenda-inferior"></div>
+        </div>
     </div>
+
+
+
 
     <div id="calendarScreen" class="screen">
         <button class="btn-secondary" style="margin-bottom: 20px;" onclick="showScreen('mainScreen')"><i class="fas fa-arrow-left"></i> Volver</button>
@@ -400,7 +464,109 @@
         </div>
     </div>
 
+    <div id="mini-calendar-popup">
+        <div id="mini-cal-title" style="font-weight: 800; color: #2c3e50; font-size: 1rem; text-transform: uppercase;">Mes Año</div>
+        <div class="mini-grid" id="mini-cal-grid"></div>
+    </div>
+
+    <div id="modalAgendaCompleta" class="modal-overlay modal-fullscreen" style="z-index: 1000;">
+        <div class="modal-content">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin-top:0;"><i class="fas fa-calendar-week"></i> Calendario Distrital</h3>
+                <i class="fas fa-tasks" id="btn-lista-agenda" onclick="abrirListaAgendaPastor()" style="display:none; cursor:pointer; color:var(--primary); font-size:1.5rem; padding: 5px;" title="Gestión de Visibilidad"></i>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; background:var(--surface); padding:10px; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                <input type="month" id="mes-agenda-completa" onchange="renderAgendaCompleta()" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px;">
+            </div>
+
+
+
+            <div class="agenda-completa-header">
+                <div class="text-danger">DOM</div><div>LUN</div><div>MAR</div><div>MIE</div><div>JUE</div><div>VIE</div><div style="color:var(--primary);">SAB</div>
+            </div>
+            <div class="agenda-completa-grid contenido-scroll" id="agenda-grid-container"></div>
+            
+            <button class="btn-add-agenda" id="btn-add-agenda" onclick="abrirFormularioAgenda()">+ AGREGAR ACTIVIDAD A KALENDER</button>
+            <button class="btn-secondary" onclick="document.getElementById('modalAgendaCompleta').style.display='none'">CERRAR</button>
+        </div>
+    </div>
+
+    <div id="modalGestionAgenda" class="modal-overlay" style="z-index: 1100;">
+        <div class="modal-content">
+            <h3 id="titulo-modal-agenda" style="margin-top:0;">Gestión de Actividad</h3>
+            <div class="contenido-scroll">
+                <input type="hidden" id="agenda-evt-id">
+                <div class="form-group">
+                    <label>Título del Evento:</label>
+                    <input type="text" id="agenda-evt-titulo" placeholder="Ej. Santa Cena">
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <div class="form-group" style="flex:1;">
+                        <label>Inicio:</label>
+                        <input type="date" id="agenda-evt-inicio">
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>Fin:</label>
+                        <input type="date" id="agenda-evt-fin">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Departamento:</label>
+                    <select id="agenda-evt-dept"></select>
+                </div>
+                <div class="form-group" style="background:#fff3cd; padding:10px; border-radius:5px; border-left:4px solid #ffc107;">
+                    <label style="font-weight:bold;"><i class="fas fa-eye"></i> Visibilidad:</label>
+                    <select id="agenda-evt-visibilidad">
+                        <option value="todos">Público (Todos lo ven)</option>
+                        <option value="admins">Solo Administradores</option>
+                        <option value="privado" style="color:red; font-weight:bold;">Privado (Solo Pastor de Distrito)</option>
+                    </select>
+                    <small style="color:#cc0000; font-size:0.75rem; display:block; margin-top:5px;"><b>Nota:</b> "Familia Pastoral" SIEMPRE será Privado y oculto para el resto automáticamente.</small>
+                </div>
+                <div class="form-group">
+                    <label>Detalles:</label>
+                    <textarea id="agenda-evt-detalles" rows="3"></textarea>
+                </div>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button onclick="guardarEventoAgenda()" style="background:#4caf50; margin-top:0;">GUARDAR</button>
+                <button id="btn-delete-agenda" onclick="eliminarEventoAgenda()" style="background:#cc0000; width:auto; margin-top:0; display:none;"><i class="fas fa-trash"></i></button>
+            </div>
+            <button class="btn-secondary" onclick="document.getElementById('modalGestionAgenda').style.display='none'">CANCELAR</button>
+        </div>
+    </div>
+
+    <div id="modalListaAgendaPastor" class="modal-overlay modal-fullscreen" style="z-index: 1050;">
+        <div class="modal-content">
+            <h3 style="margin-top:0;"><i class="fas fa-tasks"></i> Gestión de Visibilidad</h3>
+            <div style="display:flex; gap:5px; margin-bottom: 10px; align-items: center; justify-content:space-between;">
+                <div style="display:flex; gap:5px; flex-grow: 1;">
+                    <input type="month" id="filtro-mes-lista-agenda" onchange="renderListaAgendaPastor()" style="padding: 4px 8px; font-size: 0.85rem; width: 100%; height: 32px; box-sizing: border-box;">
+                    <button style="margin: 0; padding: 4px 10px; width: auto; font-size: 0.85rem; height: 32px; display: flex; align-items: center; gap: 5px;" onclick="document.getElementById('filtro-mes-lista-agenda').value=''; renderListaAgendaPastor()"><i class="fas fa-times"></i></button>
+                </div>
+                <div style="display:flex; gap:8px; align-items:center; background:#e0e0e0; padding:4px 8px; border-radius:5px;">
+                    <i class="fas fa-users text-primary" style="font-size:1.2rem; cursor:pointer;" onclick="bulkToggleVisibilidad('users')" title="Ajuste Masivo Usuarios"></i>
+                    <i class="fas fa-user-shield text-primary" style="font-size:1.2rem; cursor:pointer;" onclick="bulkToggleVisibilidad('admins')" title="Ajuste Masivo Admins"></i>
+                </div>
+            </div>
+
+
+
+            <div class="contenido-scroll" id="contenedor-lista-agenda" style="background: #f9f9f9; padding: 10px; border-radius: 8px;"></div>
+            <button class="btn-secondary" onclick="document.getElementById('modalListaAgendaPastor').style.display='none'">CERRAR</button>
+        </div>
+    </div>
+
     <script>
+
+
+
+
+
+
+
+
+
 
 /*
         // --- CONSOLA DE DEPURACIÓN EN PANTALLA ---
@@ -436,7 +602,55 @@
         let sabadoVisto = ""; // Guarda la fecha del sábado por el que estamos navegando
         let guardandoEnNube = false;
 
+        // Variables para la integración con Kalender
+        let eventosAgenda = [];
+        let departamentosAgenda = {};
+        let miniCalTimeout = null;
+        const GIST_AGENDA_ID = "8689bdeb95e47224c6e44223158abc0a";
+        const TOKEN_AGENDA_1 = "ghp_3C5DAGokEsqm8Fyw"; // <--- ¡AQUÍ PON LA PARTE 1 DE TU TOKEN DE KALENDER!
+        const TOKEN_AGENDA_2 = "PEYu98RKa2CR2U0iznop"; // <--- ¡AQUÍ PON LA PARTE 2 DE TU TOKEN DE KALENDER!
+
+        // EL MOTOR DE PRIVACIDAD ABSOLUTA
+
+
+
+        function puedeVerEventoAgenda(evt) {
+            let esPastor = (usuarioActual && usuarioActual.nombre === 'Pastor de Distrito');
+            let esAdmin = (usuarioActual && usuarioActual.rol === 'admin') || esPastor;
+            
+            let visibilidad = evt.visibilidad || 'todos'; // Por defecto público
+            if (evt.dept === 'familia-pastoral') visibilidad = 'privado'; // Forzado a privado siempre
+            
+            if (visibilidad === 'todos') return true;
+            if (visibilidad === 'admins' && esAdmin) return true;
+            if (visibilidad === 'privado' && esPastor) return true;
+            return false;
+        }
+
+        async function fetchAgendaGist() {
+
+
+
+            try {
+                let url = `https://api.github.com/gists/${GIST_AGENDA_ID}?t=${new Date().getTime()}`;
+                let req = await fetch(url);
+                if (req.ok) {
+                    let res = await req.json();
+                    let archivo = res.files["calendar_data.json"];
+                    if (archivo && archivo.content) {
+                        let data = JSON.parse(archivo.content);
+                        eventosAgenda = data.eventos || [];
+                        departamentosAgenda = data.departamentos || {};
+                        if(document.getElementById('mainScreen').classList.contains('active')) renderCards();
+                    }
+                }
+            } catch (e) { console.log("Modo offline para agenda distrital"); }
+        }
+
         const himnario = {
+
+
+
             preparacion: [
                 {n:33, t:"Tu presencia, Padre amante, invocamos", c:"EL CULTO", sc:"Inicio del Culto", l:"Con un canto de alegría, / Alabamos al Señor."},
                 {n:25, t:"Siento la presencia", c:"EL CULTO", sc:"Inicio del culto", l:"Siento la presencia del Señor en este lugar."}
@@ -1411,7 +1625,61 @@
                 `;
             }
         });
+
+        // --- RENDERIZAR AGENDA DISTRITAL (KALENDER) ---
+        const contenedorAgenda = document.getElementById('lista-agenda-inferior');
+        const contenidoAgenda = document.getElementById('contenido-agenda-inferior');
+        
+        let eventosDelSabado = eventosAgenda.filter(e => {
+            let start = e.date;
+            let end = e.endDate || e.date;
+            let enRango = sabadoVisto >= start && sabadoVisto <= end;
+            return enRango && puedeVerEventoAgenda(e);
+        });
+
+        if (eventosDelSabado.length > 0) {
+            contenedorAgenda.style.display = 'block';
+            contenidoAgenda.innerHTML = eventosDelSabado.map(evt => {
+                let dept = departamentosAgenda[evt.dept] || { name: "General", color: "#57606f", icon: "fas fa-calendar-check" };
+                
+                let adminTools = "";
+                if (usuarioActual && usuarioActual.nombre === 'Pastor de Distrito') {
+                    let esFamPastoral = (evt.dept === 'familia-pastoral');
+                    let visActual = evt.visibilidad || 'todos';
+                    if(esFamPastoral) visActual = 'privado';
+                    let verUsers = (visActual === 'todos') ? 'fa-eye ojo-on' : 'fa-eye-slash ojo-off';
+                    let verAdmins = (visActual === 'todos' || visActual === 'admins') ? 'fa-eye ojo-on' : 'fa-eye-slash ojo-off';
+                    
+                    let visIconos = esFamPastoral ? `<i class="fas fa-lock text-danger" title="Estrictamente Privado" style="margin-right:15px;"></i>` : `<i class="fas ${verUsers}" onclick="toggleVisibilidadAgenda('${evt.id}', 'users')" title="Visible Usuarios" style="cursor:pointer; font-size:1.1rem; margin-right:8px;"></i><i class="fas ${verAdmins}" onclick="toggleVisibilidadAgenda('${evt.id}', 'admins')" title="Visible Admins" style="cursor:pointer; font-size:1.1rem; margin-right:15px;"></i>`;
+                    
+                    adminTools = `
+                    <div style="display:flex; align-items:center;">
+                        ${visIconos}
+                        <i class="fas fa-edit" style="color:var(--primary); cursor:pointer; font-size:1.1rem;" onclick="abrirFormularioAgenda('${evt.id}')"></i>
+                    </div>`;
+                }
+
+                return `
+                    <div class="agenda-card" style="border-left-color: ${dept.color};">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                            <div class="agenda-dept" style="background-color: ${dept.color};"><i class="${dept.icon}"></i> ${dept.name}</div>
+                            ${adminTools}
+                        </div>
+                        <div class="agenda-title">${evt.title}</div>
+                        ${evt.details ? `<div style="font-size:0.85rem; color:#666; margin-top:5px;"><i class="fas fa-align-left text-muted"></i> ${evt.details}</div>` : ''}
+                    </div>`;
+            }).join('');
+        } else {
+
+
+
+            contenedorAgenda.style.display = 'none';
+            contenidoAgenda.innerHTML = '';
+        }
     }
+
+
+
 
     function cambiarSemana(direccion) {
         let fechaActual = new Date(sabadoVisto + "T12:00:00");
@@ -1421,12 +1689,17 @@
         const dia = String(fechaActual.getDate()).padStart(2, '0');
         sabadoVisto = `${año}-${mes}-${dia}`;
         renderCards();
+        mostrarMiniCalendario(sabadoVisto);
     }
 
     function volverASabadoProximo() {
         sabadoVisto = proximoSabado;
         renderCards();
+        mostrarMiniCalendario(sabadoVisto);
     }
+
+
+
 
     let touchStartX = 0;
     let isTwoFingers = false;
@@ -1465,6 +1738,9 @@
             const capasModales = [
                 { id: 'modalIconos' },
                 { id: 'modalEvaluacion', fn: cerrarEvaluacion },
+                { id: 'modalListaAgendaPastor' },
+                { id: 'modalGestionAgenda' },
+                { id: 'modalAgendaCompleta' },
                 { id: 'modalHistorial' },
                 { id: 'modalSustituciones' },
                 { id: 'modalInfoPredicacion' },
@@ -1475,6 +1751,9 @@
                 { id: 'modalUsuario' },
                 { id: 'modalLeyenda' }
             ];
+
+
+
             
             let cerroModal = false;
             for (let modal of capasModales) {
@@ -1636,7 +1915,384 @@
             setTimeout(() => document.getElementById('select-iglesia').focus(), 100);
         }
 
+        function mostrarMiniCalendario(fechaISO) {
+            if (!usuarioActual) return;
+            const popup = document.getElementById('mini-calendar-popup');
+            const grid = document.getElementById('mini-cal-grid');
+
+
+
+            const title = document.getElementById('mini-cal-title');
+            
+            const [yyyy, mm, dd] = fechaISO.split('-');
+            const dateObj = new Date(yyyy, parseInt(mm)-1, 1);
+            const targetDay = parseInt(dd);
+            
+            const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            title.innerText = `${meses[parseInt(mm)-1]} ${yyyy}`;
+            
+            let html = '<div class="mini-day header weekend">D</div><div class="mini-day header">L</div><div class="mini-day header">M</div><div class="mini-day header">M</div><div class="mini-day header">J</div><div class="mini-day header">V</div><div class="mini-day header weekend">S</div>';
+            
+            let startDay = dateObj.getDay();
+            let totalDays = new Date(yyyy, parseInt(mm), 0).getDate();
+            
+            for(let i=0; i<startDay; i++) { html += '<div></div>'; }
+            for(let i=1; i<=totalDays; i++) {
+                let clase = 'mini-day';
+                if(i === targetDay) clase += ' active';
+                let currentDow = new Date(yyyy, parseInt(mm)-1, i).getDay();
+                if(currentDow === 0 || currentDow === 6) clase += ' weekend';
+                html += `<div class="${clase}">${i}</div>`;
+            }
+            grid.innerHTML = html;
+            
+            popup.classList.add('show');
+            if(miniCalTimeout) clearTimeout(miniCalTimeout);
+            miniCalTimeout = setTimeout(() => { popup.classList.remove('show'); }, 3000);
+        }
+
+        // --- FUNCIONALIDAD AGENDA COMPLETA (KALENDER) ---
+        function abrirAgendaCompleta() {
+            const hoy = new Date();
+            const mesActual = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
+            document.getElementById('mes-agenda-completa').value = mesActual;
+            renderAgendaCompleta();
+            
+            // Solo el Pastor de Distrito puede agregar/editar la Agenda global
+            const btnAdd = document.getElementById('btn-add-agenda');
+            const btnLista = document.getElementById('btn-lista-agenda');
+            if (usuarioActual && usuarioActual.nombre === 'Pastor de Distrito') {
+                btnAdd.style.display = 'block';
+                btnLista.style.display = 'inline-block';
+            } else {
+                btnAdd.style.display = 'none';
+                btnLista.style.display = 'none';
+            }
+            document.getElementById('modalAgendaCompleta').style.display = 'block';
+        }
+
+        function renderAgendaCompleta() {
+            const grid = document.getElementById('agenda-grid-container');
+            grid.innerHTML = '';
+            const mesInput = document.getElementById('mes-agenda-completa').value;
+            if (!mesInput) return;
+            const [yyyy, mm] = mesInput.split('-');
+            const año = parseInt(yyyy);
+            const mes = parseInt(mm) - 1;
+
+            const firstDayIndex = new Date(año, mes, 1).getDay();
+            const lastDay = new Date(año, mes + 1, 0).getDate();
+            
+            for (let i = 0; i < firstDayIndex; i++) {
+                grid.innerHTML += `<div style="background:transparent;"></div>`;
+            }
+
+            for (let day = 1; day <= lastDay; day++) {
+                const fechaISO = `${año}-${String(mes + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                
+                let dayEvents = eventosAgenda.filter(e => {
+                    let start = e.date;
+                    let end = e.endDate || e.date;
+                    return (fechaISO >= start && fechaISO <= end) && puedeVerEventoAgenda(e);
+                });
+
+                let badgesHTML = dayEvents.map(evt => {
+                    let dept = departamentosAgenda[evt.dept] || { name: "General", color: "#57606f", icon: "fas fa-calendar-check" };
+                    let clickAttr = (usuarioActual && usuarioActual.nombre === 'Pastor de Distrito') ? `onclick="abrirFormularioAgenda('${evt.id}')"` : `onclick="alert('${evt.title}\\n${evt.details || ''}')"`;
+                    return `<div class="evt-badge" style="background-color: ${dept.color};" title="${evt.title}" ${clickAttr}><i class="${dept.icon}"></i><span style="display:none;"></span></div>`;
+                }).join('');
+
+                let bgToday = (fechaISO === new Date().toISOString().split('T')[0]) ? 'background-color:#e6f2ff; border:2px solid var(--primary);' : '';
+                grid.innerHTML += `
+                    <div class="cal-day-box" style="${bgToday}">
+                        <div class="cal-day-num">${day}</div>
+                        ${badgesHTML}
+                    </div>`;
+            }
+        }
+
+        function abrirListaAgendaPastor() {
+            const hoy = new Date();
+            const mesActual = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
+            document.getElementById('filtro-mes-lista-agenda').value = mesActual;
+            renderListaAgendaPastor();
+            document.getElementById('modalListaAgendaPastor').style.display = 'block';
+        }
+
+        function renderListaAgendaPastor() {
+            const contenedor = document.getElementById('contenedor-lista-agenda');
+            contenedor.innerHTML = "";
+            const filtroMes = document.getElementById('filtro-mes-lista-agenda').value;
+            
+            let eventosFiltrados = [...eventosAgenda];
+            eventosFiltrados.sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            if (filtroMes) {
+                eventosFiltrados = eventosFiltrados.filter(p => p.date.startsWith(filtroMes));
+            }
+
+            if (eventosFiltrados.length === 0) {
+                contenedor.innerHTML = `<p style="text-align:center; color:#666; margin-top:20px;">No hay actividades registradas${filtroMes ? ' en este mes' : ''}.</p>`;
+                return;
+            }
+
+            let htmlLista = eventosFiltrados.map(evt => {
+                let dept = departamentosAgenda[evt.dept] || { name: "General", color: "#57606f", icon: "fas fa-calendar-check" };
+                let esFamPastoral = (evt.dept === 'familia-pastoral');
+                let visActual = evt.visibilidad || 'todos';
+                if(esFamPastoral) visActual = 'privado'; // Forzado
+
+                // Iconos de permisos con animación y estilos metálicos
+                let verUsers = (visActual === 'todos') ? 'fa-eye ojo-on' : 'fa-eye-slash ojo-off';
+                let verAdmins = (visActual === 'todos' || visActual === 'admins') ? 'fa-eye ojo-on' : 'fa-eye-slash ojo-off';
+
+                let actions = esFamPastoral ? 
+                    `<i class="fas fa-lock text-danger" style="font-size:1.4rem;" title="Estrictamente Privado"></i>` :
+                    `
+                    <div style="display:flex; flex-direction:column; align-items:center; gap:2px;">
+                        <i class="fas ${verUsers}" style="font-size:1.4rem; cursor:pointer; padding:4px;" onclick="toggleVisibilidadAgenda('${evt.id}', 'users')" title="Visible para Usuarios"></i>
+                        <span style="font-size:0.6rem; color:#666; font-weight:bold;">Users</span>
+                    </div>
+                    <div style="display:flex; flex-direction:column; align-items:center; gap:2px; margin-left:15px;">
+                        <i class="fas ${verAdmins}" style="font-size:1.4rem; cursor:pointer; padding:4px;" onclick="toggleVisibilidadAgenda('${evt.id}', 'admins')" title="Visible para Admins"></i>
+                        <span style="font-size:0.6rem; color:#666; font-weight:bold;">Admins</span>
+                    </div>`;
+
+
+
+
+                return `
+                    <div style="background: white; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 5px solid ${dept.color}; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <div style="font-size:0.75rem; background-color:${dept.color}33; color:${dept.color}; padding:2px 6px; border-radius:12px; font-weight:bold; display:inline-block; margin-bottom:3px;"><i class="${dept.icon}"></i> ${dept.name}</div>
+                            <div style="font-weight:bold; font-size:0.95rem; color:#333;">${evt.title}</div>
+                            <div style="font-size:0.8rem; color:#666;"><i class="far fa-calendar-alt"></i> ${formatearFechaVisual(evt.date)}</div>
+                        </div>
+                        <div style="display:flex; align-items:center;">
+                            ${actions}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            contenedor.innerHTML = htmlLista;
+        }
+
+        function toggleVisibilidadAgenda(id, type) {
+            let evt = eventosAgenda.find(e => e.id === id);
+            if (!evt || evt.dept === 'familia-pastoral') return; // Seguridad
+
+            let actual = evt.visibilidad || 'todos';
+
+            if (type === 'users') {
+                // Si users está prendido, lo apagamos y queda en admins. Si está apagado, lo prendemos y queda en todos (admins tmb se prende)
+                evt.visibilidad = (actual === 'todos') ? 'admins' : 'todos';
+            } else if (type === 'admins') {
+                // Si admins está prendido (puede ser 'todos' o 'admins'), lo apagamos a 'privado'
+                // Si está apagado ('privado'), lo prendemos a 'admins'
+                evt.visibilidad = (actual === 'todos' || actual === 'admins') ? 'privado' : 'admins';
+            }
+
+            renderListaAgendaPastor();
+            renderAgendaCompleta(); // Reflejar en calendario
+            renderCards(); // Reflejar en index si es sábado
+            subirCambiosKalender(); // Guardar en Gist
+        }
+
+        function bulkToggleVisibilidad(type) {
+            const filtroMes = document.getElementById('filtro-mes-lista-agenda').value;
+            if (!filtroMes) {
+                alert("Primero selecciona un mes en el buscador para aplicar el cambio masivo.");
+                return;
+            }
+            
+            let target = type === 'users' ? 'USUARIOS GENERALES' : 'ADMINISTRADORES';
+            let resp1 = confirm(`¿Quieres hacer VISIBLES para ${target} todas las actividades del mes de ${filtroMes}?\n\n[ACEPTAR] = Hacer Visibles\n[CANCELAR] = Ocultarlas`);
+            let resp2 = confirm(`⚠️ CONFIRMACIÓN FINAL:\nEstás a punto de ${resp1 ? 'MOSTRAR' : 'OCULTAR'} las actividades de ${filtroMes} a ${target}.\n\n¿Estás seguro?`);
+            
+            if (!resp2) return;
+
+            let cambiados = 0;
+            eventosAgenda.forEach(evt => {
+                if (evt.date.startsWith(filtroMes) && evt.dept !== 'familia-pastoral') {
+                    let actual = evt.visibilidad || 'todos';
+                    if (type === 'users') {
+                        evt.visibilidad = resp1 ? 'todos' : (actual === 'todos' ? 'admins' : actual);
+                    } else if (type === 'admins') {
+                        evt.visibilidad = resp1 ? (actual === 'privado' ? 'admins' : actual) : 'privado';
+                    }
+                    cambiados++;
+                }
+            });
+
+            if(cambiados > 0) {
+                renderListaAgendaPastor();
+                renderAgendaCompleta();
+                renderCards();
+                subirCambiosKalender();
+            }
+        }
+
+        function bulkToggleVisibilidad(type) {
+            const filtroMes = document.getElementById('filtro-mes-lista-agenda').value;
+            if (!filtroMes) {
+                alert("Primero selecciona un mes en el buscador.");
+                return;
+            }
+            
+            let target = type === 'users' ? 'USUARIOS GENERALES' : 'ADMINISTRADORES';
+            if(!confirm(`¿Deseas cambiar masivamente la visibilidad de TODO el mes de ${filtroMes} para los ${target}?`)) return;
+
+            let nuevoEstado = type === 'users' ? 'todos' : 'admins';
+            let estadoApagado = type === 'users' ? 'admins' : 'privado';
+            
+            // Verificamos si encendemos o apagamos usando el primer evento normal de ese mes
+            let prender = true;
+            for (let evt of eventosAgenda) {
+                if (evt.date.startsWith(filtroMes) && evt.dept !== 'familia-pastoral') {
+                    let actual = evt.visibilidad || 'todos';
+                    if (type === 'users' && actual === 'todos') prender = false;
+                    if (type === 'admins' && (actual === 'todos' || actual === 'admins')) prender = false;
+                    break;
+                }
+            }
+
+            eventosAgenda.forEach(evt => {
+                if (evt.date.startsWith(filtroMes) && evt.dept !== 'familia-pastoral') {
+                    evt.visibilidad = prender ? nuevoEstado : estadoApagado;
+                }
+            });
+
+            renderListaAgendaPastor();
+            renderAgendaCompleta();
+            renderCards();
+            subirCambiosKalender();
+        }
+
+        function eliminarEventoDirecto(id, titulo) {
+            let pass = prompt(`Ingresa tu clave (1402) para ELIMINAR:\n${titulo}`);
+            if (pass === "1402") {
+                eventosAgenda = eventosAgenda.filter(e => e.id != id);
+                renderAgendaCompleta();
+                renderListaAgendaPastor();
+                renderCards();
+                subirCambiosKalender();
+            } else if (pass !== null) {
+                alert("Código incorrecto.");
+            }
+        }
+
+        function llenarSelectDeptAgenda() {
+
+
+
+
+
+
+
+
+
+            const select = document.getElementById('agenda-evt-dept');
+            select.innerHTML = '';
+            for (const [key, val] of Object.entries(departamentosAgenda)) {
+                select.innerHTML += `<option value="${key}">${val.name}</option>`;
+            }
+        }
+
+        function abrirFormularioAgenda(id = null) {
+            llenarSelectDeptAgenda();
+            const btnDelete = document.getElementById('btn-delete-agenda');
+            
+            if (id) {
+                const evt = eventosAgenda.find(e => e.id == id);
+                if(evt) {
+                    document.getElementById('titulo-modal-agenda').innerHTML = '<i class="fas fa-edit"></i> Editar Actividad';
+                    document.getElementById('agenda-evt-id').value = evt.id;
+                    document.getElementById('agenda-evt-titulo').value = evt.title;
+                    document.getElementById('agenda-evt-inicio').value = evt.date;
+                    document.getElementById('agenda-evt-fin').value = evt.endDate || evt.date;
+                    document.getElementById('agenda-evt-dept').value = evt.dept || 'default';
+                    document.getElementById('agenda-evt-detalles').value = evt.details || '';
+                    document.getElementById('agenda-evt-visibilidad').value = evt.visibilidad || 'todos';
+                    btnDelete.style.display = 'block';
+                }
+            } else {
+                document.getElementById('titulo-modal-agenda').innerHTML = '<i class="fas fa-plus"></i> Nueva Actividad';
+                document.getElementById('agenda-evt-id').value = '';
+                document.getElementById('agenda-evt-titulo').value = '';
+                document.getElementById('agenda-evt-inicio').value = new Date().toISOString().split('T')[0];
+                document.getElementById('agenda-evt-fin').value = '';
+                document.getElementById('agenda-evt-dept').value = 'default';
+                document.getElementById('agenda-evt-detalles').value = '';
+                document.getElementById('agenda-evt-visibilidad').value = 'todos';
+                btnDelete.style.display = 'none';
+            }
+            document.getElementById('modalGestionAgenda').style.display = 'block';
+        }
+
+        async function subirCambiosKalender() {
+            if (!TOKEN_AGENDA_1 || !TOKEN_AGENDA_2) {
+                alert("ATENCIÓN: No has colocado el token de Kalender en el código. No se guardará en la nube.");
+                return;
+            }
+            const payload = { eventos: eventosAgenda, departamentos: departamentosAgenda };
+            try {
+                await fetch(`https://api.github.com/gists/${GIST_AGENDA_ID}`, {
+                    method: 'PATCH',
+                    headers: { 'Authorization': `token ${TOKEN_AGENDA_1}${TOKEN_AGENDA_2}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ files: { "calendar_data.json": { content: JSON.stringify(payload, null, 4) } } })
+                });
+            } catch(e) {
+                alert("Error de red al guardar en Kalender");
+            }
+        }
+
+
+
+
+        function guardarEventoAgenda() {
+            const id = document.getElementById('agenda-evt-id').value;
+            const title = document.getElementById('agenda-evt-titulo').value;
+            const date = document.getElementById('agenda-evt-inicio').value;
+            let endDate = document.getElementById('agenda-evt-fin').value;
+            const dept = document.getElementById('agenda-evt-dept').value;
+            const details = document.getElementById('agenda-evt-detalles').value;
+            const visibilidad = document.getElementById('agenda-evt-visibilidad').value;
+
+            if (!date || !title) { alert('Título y Fecha de Inicio son obligatorios'); return; }
+            if (!endDate || endDate < date) endDate = date;
+
+            if (id) {
+                const index = eventosAgenda.findIndex(e => e.id == id);
+                if (index !== -1) eventosAgenda[index] = { id, date, endDate, title, dept, details, visibilidad };
+            } else {
+                eventosAgenda.push({ id: Date.now().toString(), date, endDate, title, dept, details, visibilidad });
+            }
+            
+            document.getElementById('modalGestionAgenda').style.display = 'none';
+            renderAgendaCompleta();
+            renderCards(); // Para que se actualice la de abajo
+            subirCambiosKalender();
+        }
+
+        function eliminarEventoAgenda() {
+            if(confirm("¿Estás seguro de eliminar esta actividad de Kalender?")) {
+                const id = document.getElementById('agenda-evt-id').value;
+                eventosAgenda = eventosAgenda.filter(e => e.id != id);
+                document.getElementById('modalGestionAgenda').style.display = 'none';
+                renderAgendaCompleta();
+                renderCards();
+                subirCambiosKalender();
+            }
+        }
+
         function quitarAcentosExtremo(texto) {
+
+
+
+
+
+
             return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
         }
 
@@ -2471,6 +3127,7 @@
         window.onload = () => {
             cargarHimnosDatalist();
             calcularProximoSabado();
+            fetchAgendaGist(); // Cargar Kalender automáticamente
 
 
 
@@ -2497,14 +3154,14 @@
                 }
             }, 300);
             
-            // Sincronización REAL a Gist y Local cada 30 segundos
+            // Sincronización REAL a Gist y Local cada 30 segundos para TODOS
             setInterval(() => {
-                if (!usuarioActual) {
-                    fetchGist(); // Usuarios sin clave descargan cada 30 segundos
-                }
-                // Si es administrador, NO descarga cada 30 segundos para que no choque con sus modificaciones.
-                // Sus cambios se suben a la nube automáticamente al presionar los botones de "Guardar" o "Eliminar".
+                fetchGist();
+                fetchAgendaGist(); // Actualiza también el Kalender automáticamente
             }, 30000);
+
+
+
 
 
 
