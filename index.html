@@ -2006,15 +2006,62 @@
                 let badgesHTML = dayEvents.map(evt => {
                     let dept = departamentosAgenda[evt.dept] || { name: "General", color: "#57606f", icon: "fas fa-calendar-check" };
                     let clickAttr = (usuarioActual && usuarioActual.nombre === 'Pastor de Distrito') ? `onclick="abrirFormularioAgenda('${evt.id}')"` : `onclick="alert('${evt.title}\\n${evt.details || ''}')"`;
-                    return `<div class="evt-badge" style="background-color: ${dept.color};" title="${evt.title}" ${clickAttr}><i class="${dept.icon}"></i><span style="display:none;"></span></div>`;
+                    
+                    let start = evt.date;
+                    let end = evt.endDate || evt.date;
+                    let isStart = (fechaISO === start);
+                    let isOneDayEvent = (start === end);
+                    
+                    let currentDayObj = new Date(fechaISO + 'T00:00:00');
+                    let isFirstDayOfWeek = (currentDayObj.getDay() === 0);
+
+                    let shouldDrawVisible = isStart || isFirstDayOfWeek;
+
+                    if (shouldDrawVisible) {
+                        let endObj = new Date(end + 'T00:00:00');
+                        let daysLeftInEvent = Math.round((endObj - currentDayObj) / 86400000) + 1;
+                        let daysLeftInWeek = 7 - currentDayObj.getDay();
+                        let span = Math.min(daysLeftInEvent, daysLeftInWeek);
+
+                        let extraStyles = `background-color: ${dept.color} !important; position: relative; z-index: 10; margin-top: 2px;`;
+                        
+                        if (span > 1) {
+                            extraStyles += ` width: calc(${span * 100}% + ${(span - 1) * 10}px); justify-content: flex-start; padding-left: 6px;`;
+                        } else {
+                            extraStyles += ` width: 100%; justify-content: center;`;
+                        }
+
+                        if (daysLeftInEvent > daysLeftInWeek) {
+                            extraStyles += ` border-top-right-radius: 0px; border-bottom-right-radius: 0px;`;
+                        }
+                        if (!isStart) {
+                            extraStyles += ` border-top-left-radius: 0px; border-bottom-left-radius: 0px;`;
+                        }
+
+                        let isOrphanSunday = (!isStart && isFirstDayOfWeek && span === 1);
+                        let innerCont = '';
+                        
+                        if (isOneDayEvent || isOrphanSunday) {
+                            innerCont = `<i class="${dept.icon}"></i>`;
+                        } else {
+                            innerCont = `<i class="${dept.icon}" style="margin-right: 5px;"></i> <span style="font-size: 0.8rem; font-weight: bold; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${evt.title}</span>`;
+                        }
+                        
+                        return `<div class="evt-badge" style="${extraStyles}" title="${evt.title}" ${clickAttr}>${innerCont}</div>`;
+                    } else {
+                        return `<div style="height: 20px; opacity: 0; pointer-events: none; margin-top: 2px;"></div>`;
+                    }
                 }).join('');
 
                 let bgToday = (fechaISO === new Date().toISOString().split('T')[0]) ? 'background-color:#e6f2ff; border:2px solid var(--primary);' : '';
                 grid.innerHTML += `
-                    <div class="cal-day-box" style="${bgToday}">
+                    <div class="cal-day-box" style="overflow: visible; min-width: 0; ${bgToday}">
                         <div class="cal-day-num">${day}</div>
                         ${badgesHTML}
                     </div>`;
+
+
+
             }
         }
 
