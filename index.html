@@ -538,7 +538,14 @@
 
     <div id="modalListaAgendaPastor" class="modal-overlay modal-fullscreen" style="z-index: 1050;">
         <div class="modal-content">
-            <h3 style="margin-top:0;"><i class="fas fa-tasks"></i> Gestión de Visibilidad</h3>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+                <h3 style="margin:0; flex-grow:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" id="agenda-lista-titulo"><i class="fas fa-tasks"></i> Gestión de Visibilidad</h3>
+                <i class="fas fa-search" id="btn-mostrar-buscador-agenda" style="color:var(--primary); cursor:pointer; font-size:1.2rem; margin-left:10px; padding:5px;" onclick="toggleBuscadorAgenda(true)"></i>
+                <div id="caja-buscador-agenda" style="display:none; position:relative; flex-grow:2;">
+                    <input type="text" id="input-buscador-agenda" placeholder="Buscar palabras o ej. may 23 25" onkeyup="renderListaAgendaPastor()" onblur="toggleBuscadorAgenda(false)" style="padding:4px 25px 4px 10px; font-size:0.9rem; height:32px; width:100%; border:1px solid var(--primary); border-radius:15px; box-sizing:border-box;">
+                    <i class="fas fa-times-circle" style="position:absolute; right:8px; top:7px; color:#999; cursor:pointer; font-size:1.1rem;" onmousedown="limpiarBuscadorAgenda(event)"></i>
+                </div>
+            </div>
             <div style="display:flex; gap:5px; margin-bottom: 10px; align-items: center; justify-content:space-between;">
                 <div style="display:flex; gap:5px; flex-grow: 1;">
                     <input type="month" id="filtro-mes-lista-agenda" onchange="renderListaAgendaPastor()" style="padding: 4px 8px; font-size: 0.85rem; width: 100%; height: 32px; box-sizing: border-box;">
@@ -633,7 +640,7 @@
 
             try {
                 let url = `https://api.github.com/gists/${GIST_AGENDA_ID}?t=${new Date().getTime()}`;
-                let req = await fetch(url);
+                let req = await fetch(url, { headers: { "Authorization": `token ${TOKEN_AGENDA_1}${TOKEN_AGENDA_2}` } });
                 if (req.ok) {
                     let res = await req.json();
                     let archivo = res.files["calendar_data.json"];
@@ -2011,10 +2018,40 @@
             }
         }
 
+        function toggleBuscadorAgenda(mostrar) {
+            if (mostrar) {
+                document.getElementById('agenda-lista-titulo').style.display = 'none';
+                document.getElementById('btn-mostrar-buscador-agenda').style.display = 'none';
+                document.getElementById('caja-buscador-agenda').style.display = 'block';
+                document.getElementById('input-buscador-agenda').focus();
+            } else {
+                document.getElementById('agenda-lista-titulo').style.display = 'block';
+                document.getElementById('caja-buscador-agenda').style.display = 'none';
+                document.getElementById('btn-mostrar-buscador-agenda').style.display = 'block';
+                if(document.getElementById('input-buscador-agenda').value.trim() !== '') {
+                    document.getElementById('btn-mostrar-buscador-agenda').style.color = '#cc0000';
+                } else {
+                    document.getElementById('btn-mostrar-buscador-agenda').style.color = 'var(--primary)';
+                }
+            }
+        }
+
+        function limpiarBuscadorAgenda(e) {
+            if(e) e.preventDefault();
+            const input = document.getElementById('input-buscador-agenda');
+            input.value = '';
+            renderListaAgendaPastor();
+            input.focus();
+        }
+
         function abrirListaAgendaPastor() {
             const hoy = new Date();
             const mesActual = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
             document.getElementById('filtro-mes-lista-agenda').value = mesActual;
+            if (document.getElementById('input-buscador-agenda')) {
+                document.getElementById('input-buscador-agenda').value = '';
+                toggleBuscadorAgenda(false);
+            }
             renderListaAgendaPastor();
             document.getElementById('modalListaAgendaPastor').style.display = 'block';
         }
@@ -2023,11 +2060,39 @@
             const contenedor = document.getElementById('contenedor-lista-agenda');
             contenedor.innerHTML = "";
             const filtroMes = document.getElementById('filtro-mes-lista-agenda').value;
+            const inputBusq = document.getElementById('input-buscador-agenda');
+            let textoBusqueda = inputBusq ? quitarAcentosExtremo(inputBusq.value).trim() : '';
             
             let eventosFiltrados = [...eventosAgenda];
             eventosFiltrados.sort((a, b) => new Date(a.date) - new Date(b.date));
             
-            if (filtroMes) {
+            if (textoBusqueda) {
+                let terminos = textoBusqueda.split(' ').filter(t => t !== '');
+                const mesesMap = { 'ene':'01', 'feb':'02', 'mar':'03', 'abr':'04', 'may':'05', 'jun':'06', 'jul':'07', 'ago':'08', 'sep':'09', 'oct':'10', 'nov':'11', 'dic':'12' };
+                let primerTermino = terminos[0].substring(0,3).toLowerCase();
+
+                if (mesesMap[primerTermino]) {
+                    let mesNum = mesesMap[primerTermino];
+                    let anioTarget = filtroMes ? filtroMes.split('-')[0] : new Date().getFullYear().toString();
+                    let diasBuscados = terminos.slice(1).filter(t => !isNaN(t)).map(d => String(d).padStart(2, '0'));
+
+                    eventosFiltrados = eventosFiltrados.filter(evt => {
+                        let partesFecha = evt.date.split('-');
+                        if (partesFecha[0] !== anioTarget || partesFecha[1] !== mesNum) return false;
+                        if (diasBuscados.length > 0) {
+                            return diasBuscados.includes(partesFecha[2]);
+                        }
+                        return true;
+                    });
+                } else {
+                    eventosFiltrados = eventosFiltrados.filter(evt => {
+                        let dept = departamentosAgenda[evt.dept] ? departamentosAgenda[evt.dept].name : '';
+                        let fechaLarga = formatearFechaVisual(evt.date);
+                        let textoComp = quitarAcentosExtremo(`${evt.title} ${dept} ${evt.details || ''} ${fechaLarga}`);
+                        return terminos.every(term => textoComp.includes(term));
+                    });
+                }
+            } else if (filtroMes) {
                 eventosFiltrados = eventosFiltrados.filter(p => p.date.startsWith(filtroMes));
             }
 
