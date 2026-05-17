@@ -155,7 +155,7 @@
                 <div id="lista-agenda-inferior" style="margin-top: 25px; display: none;">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; border-bottom: 2px dashed #bdc3c7; padding-bottom: 5px;">
                 <i class="fas fa-calendar-check text-primary" style="font-size: 1.2rem;"></i>
-                <h4 style="color: #34495e; font-size: 1.1rem; margin: 0; font-weight: 800; text-transform: uppercase;">Agenda Distrital</h4>
+                <h4 style="color: #34495e; font-size: 1.1rem; margin: 0; font-weight: 800; text-transform: uppercase;">Agenda Misión/Distrital</h4>
             </div>
             <div id="contenido-agenda-inferior"></div>
         </div>
@@ -472,7 +472,7 @@
     <div id="modalAgendaCompleta" class="modal-overlay modal-fullscreen" style="z-index: 1000;">
         <div class="modal-content">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h3 style="margin-top:0;"><i class="fas fa-calendar-week"></i> Calendario Distrital</h3>
+                <h3 style="margin-top:0;"><i class="fas fa-calendar-week"></i> Calendario Mision / Distrita</h3>
                 <i class="fas fa-tasks" id="btn-lista-agenda" onclick="abrirListaAgendaPastor()" style="display:none; cursor:pointer; color:var(--primary); font-size:1.5rem; padding: 5px;" title="Gestión de Visibilidad"></i>
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; background:var(--surface); padding:10px; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
@@ -1712,9 +1712,19 @@
     let isTwoFingers = false;
     let swipeProcessed = false;
 
+    // Función auxiliar para cambiar meses en los inputs de mes y refrescar la vista
+    function cambiarMesGesto(inputId, direccion, funcionRender) {
+        let input = document.getElementById(inputId);
+        if(!input || !input.value) return;
+        let [año, mes] = input.value.split('-');
+        let nuevaFecha = new Date(parseInt(año), parseInt(mes) - 1 + direccion, 1);
+        input.value = `${nuevaFecha.getFullYear()}-${String(nuevaFecha.getMonth() + 1).padStart(2, '0')}`;
+        funcionRender();
+    }
+
     document.addEventListener('touchstart', e => {
-        // Verifica si se tocaron 2 dedos estando en la pantalla principal
-        if (e.touches.length === 2 && document.getElementById('mainScreen').classList.contains('active')) {
+        // Se activa con 2 dedos en cualquier pantalla
+        if (e.touches.length === 2) {
             isTwoFingers = true;
             swipeProcessed = false;
             touchStartX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
@@ -1724,15 +1734,26 @@
     }, {passive: true});
 
     document.addEventListener('touchmove', e => {
-        if (isTwoFingers && !swipeProcessed && e.touches.length === 2 && document.getElementById('mainScreen').classList.contains('active')) {
+        if (isTwoFingers && !swipeProcessed && e.touches.length === 2) {
             let currentX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
             let diffX = touchStartX - currentX;
             
-            if (diffX > 50) { 
-                cambiarSemana(1); // Deslizó a la izquierda: Próximos sábados
-                swipeProcessed = true;
-            } else if (diffX < -50) { 
-                cambiarSemana(-1); // Deslizó a la derecha: Sábados anteriores
+            if (Math.abs(diffX) > 50) { 
+                let direccion = diffX > 50 ? 1 : -1;
+                
+                // 1. Si está abierto el modal de Agenda Completa (Kalender)
+                if (document.getElementById('modalAgendaCompleta').style.display === 'block') {
+                    cambiarMesGesto('mes-agenda-completa', direccion, renderAgendaCompleta);
+                } 
+                // 2. Si está en el Calendario Mensual
+                else if (document.getElementById('calendarScreen').classList.contains('active')) {
+                    cambiarMesGesto('mes-calendario', direccion, renderCalendarioMensual);
+                } 
+                // 3. Si está en la pantalla principal (Sábados)
+                else if (document.getElementById('mainScreen').classList.contains('active')) {
+                    cambiarSemana(direccion);
+                }
+                
                 swipeProcessed = true;
             }
         }
