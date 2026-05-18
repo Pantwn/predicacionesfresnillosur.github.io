@@ -525,9 +525,12 @@
     </div>
 
     <div id="modalVisorImagen" class="modal-overlay" style="z-index: 9999; background: rgba(0,0,0,0.9);" onclick="this.style.display='none'">
-        <span style="position:absolute; top:20px; right:30px; color:white; font-size:35px; cursor:pointer;">&times;</span>
-        <img id="visor-img-src" style="display:block; max-width:95%; max-height:95%; margin:auto; position:relative; top:50%; transform:translateY(-50%); border-radius:8px;">
+        <span style="position:absolute; top:20px; right:30px; color:white; font-size:35px; cursor:pointer; z-index:10000;">&times;</span>
+        <img id="visor-img-src" style="display:block; max-width:95vw; max-height:95vh; width:auto; height:auto; object-fit:contain; margin:auto; position:absolute; top:0; left:0; bottom:0; right:0; border-radius:8px; box-shadow:0 5px 15px rgba(0,0,0,0.5);">
     </div>
+
+
+
 
     <div id="modalEditorDetalles" class="modal-overlay modal-fullscreen" style="z-index: 1150;">
         <div class="modal-content">
@@ -535,16 +538,16 @@
             <div class="contenido-scroll" style="display: flex; flex-direction: column;">
                 <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; background:#f1f5f9; padding:8px; border-radius:5px 5px 0 0; border:1px solid #ccc; border-bottom:none;">
                     <div style="display:flex; gap:4px;">
-                        <button type="button" title="Negrita (*)" onclick="insertarFormato('**', '**')" style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; padding:0; background:white; color:#333; border:1px solid #ccc; border-radius:4px; font-weight:bold; box-shadow:none; margin:0; cursor:pointer; font-family:serif;">*B*</button>
-                        <button type="button" title="Subrayado (_)" onclick="insertarFormato('__', '__')" style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; padding:0; background:white; color:#333; border:1px solid #ccc; border-radius:4px; text-decoration:underline; font-weight:bold; box-shadow:none; margin:0; cursor:pointer; font-family:serif;">_U_</button>
-                        <button type="button" title="Itálica (+)" onclick="insertarFormato('++', '++')" style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; padding:0; background:white; color:#333; border:1px solid #ccc; border-radius:4px; font-style:italic; font-weight:bold; box-shadow:none; margin:0; cursor:pointer; font-family:serif;">+I+</button>
+                        <button type="button" title="Negrita (*)" onclick="insertarFormato('**', '**')" style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; padding:0; background:white; color:#333; border:1px solid #ccc; border-radius:4px; font-weight:bold; box-shadow:none; margin:0; cursor:pointer; font-family:sans-serif; line-height:1;">B</button>
+                        <button type="button" title="Subrayado (_)" onclick="insertarFormato('__', '__')" style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; padding:0; background:white; color:#333; border:1px solid #ccc; border-radius:4px; text-decoration:underline; font-weight:bold; box-shadow:none; margin:0; cursor:pointer; font-family:sans-serif; line-height:1;">U</button>
+                        <button type="button" title="Itálica (+)" onclick="insertarFormato('++', '++')" style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; padding:0; background:white; color:#333; border:1px solid #ccc; border-radius:4px; font-style:italic; font-weight:bold; box-shadow:none; margin:0; cursor:pointer; font-family:sans-serif; line-height:1;">I</button>
                     </div>
                     <div style="height:24px; width:1px; background:#ccc; margin:0 2px;"></div>
-                    <button type="button" onclick="insertarTablaGenerada()" style="width:auto; height:32px; display:flex; align-items:center; justify-content:center; padding:0 10px; background:#28a745; color:white; border:none; border-radius:4px; font-size:0.75rem; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.2); margin:0; cursor:pointer;"><i class="fas fa-table" style="margin-right:6px;"></i> + TABLA</button>
+                    <button type="button" onclick="insertarTablaGenerada()" style="width:auto; height:32px; display:flex; align-items:center; justify-content:center; padding:0 10px; background:#28a745; color:white; border:none; border-radius:4px; font-size:0.75rem; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.2); margin:0; cursor:pointer; line-height:1;"><i class="fas fa-table" style="margin-right:6px;"></i> + TABLA</button>
                     <div style="height:24px; width:1px; background:#ccc; margin:0 2px;"></div>
                     <div style="display:flex; flex-grow:1; gap:4px; min-width:200px;">
                         <input type="text" id="url-imagen-input" placeholder="Pega URL de la imagen aquí..." style="flex-grow:1; height:32px; padding:0 8px; border:1px solid #ccc; border-radius:4px; font-size:0.8rem; margin:0;">
-                        <button type="button" onclick="insertarImagenUrl()" style="width:auto; height:32px; display:flex; align-items:center; justify-content:center; padding:0 10px; background:#17a2b8; color:white; border:none; border-radius:4px; font-size:0.75rem; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.2); margin:0; cursor:pointer;"><i class="fas fa-image" style="margin-right:6px;"></i> PEGAR</button>
+                        <button type="button" onclick="insertarImagenUrl()" style="width:auto; height:32px; display:flex; align-items:center; justify-content:center; padding:0 10px; background:#17a2b8; color:white; border:none; border-radius:4px; font-size:0.75rem; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.2); margin:0; cursor:pointer; line-height:1;"><i class="fas fa-image" style="margin-right:6px;"></i> PEGAR</button>
                     </div>
                 </div>
                 <textarea id="texto-editor-detalles" style="flex-grow: 1; width: 100%; min-height: 250px; font-family: monospace; font-size: 1rem; padding: 10px; border: 1px solid #ccc; border-radius: 0 0 5px 5px; resize: none;"></textarea>
@@ -2598,7 +2601,14 @@
         }
 
         function guardarEditorDetalles() {
-            document.getElementById('agenda-evt-detalles').value = document.getElementById('texto-editor-detalles').value;
+            let textoRaw = document.getElementById('texto-editor-detalles').value;
+            
+            // Limpieza automática de espacios invisibles <0xa0> de tu screenshot
+            textoRaw = textoRaw.replace(/\xa0/g, ' '); 
+            textoRaw = textoRaw.replace(/\[IMG\]\s+/gi, '[IMG]').replace(/\s+\[\/IMG\]/gi, '[/IMG]'); 
+            textoRaw = textoRaw.replace(/\s+([*_+][*_+])/g, ' $1').replace(/([*_+][*_+])\s+/g, '$1 '); 
+            
+            document.getElementById('agenda-evt-detalles').value = textoRaw;
             document.getElementById('modalEditorDetalles').style.display = 'none';
         }
 
@@ -2607,30 +2617,62 @@
             document.getElementById('modalVisorImagen').style.display = 'block';
         }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+
         function parsearResumenDetalles(text) {
             if (!text) return '';
             
-            // Si el texto contiene código HTML de una tabla, mostramos solo el icono
-            if (text.includes("<table") || text.includes("<td")) {
-                return "<b style='color:#e67e22; font-size: 1.1rem;' title='Contiene Tabla de Datos'><i class='fas fa-table'></i></b>";
-            }
-
-            // Convierte todos los saltos de línea físicos en un guion para que fluya en una sola línea continua
             let resumen = text.replace(/(\r\n|\n|\r)/gm, " • ");
             
-            // Aplica los formatos visuales
+            // Reemplazo de tablas por ícono limpio
+            resumen = resumen.replace(/<table[\s\S]*?<\/table>/gi, "<b style='color:#e67e22; font-size:1.1rem; margin-left:4px;' title='Contiene Tabla'><i class='fas fa-table'></i></b>");
+            
+            // Reemplazo de imágenes por ícono limpio, ocultando fallback de texto
+            resumen = resumen.replace(/\[IMG\](.*?)\[\/IMG\]/gi, "<b style='color:#28a745; font-size:1.1rem; margin-left:4px;' title='Contiene Imagen'><i class='fas fa-image'></i></b>");
+            
             resumen = resumen.replace(/\*\*(.*?)\*\*/g, '<b style="color: var(--primary, #2196F3);">$1</b>');
             resumen = resumen.replace(/__(.*?)__/g, '<u>$1</u>');
             resumen = resumen.replace(/\+\+(.*?)\+\+/g, '<i>$1</i>');
             
-            // Oculta links largos y pone un icono de imagen o link según corresponda
-            resumen = resumen.replace(/(https?:\/\/[^\s<]+)/gi, function(url) {
-                let isImg = url.match(/\.(jpeg|jpg|gif|png|webp)/i) || url.includes("drive.google.com");
-                if (isImg) {
-                    return "<b style='color:#28a745; font-size: 1.1rem;' title='Imagen Adjunta'><i class='fas fa-image'></i></b>";
-                } else {
-                    return "<b style='color:#17a2b8; font-size: 1.1rem;' title='Enlace Adjunto'><i class='fas fa-link'></i></b>";
-                }
+            // Reemplazo de enlaces por íconos temáticos limpios
+            resumen = resumen.replace(/(https?:\/\/[^\s<"']+)/gi, function(match) {
+                let m = match.toLowerCase();
+                if (m.includes("youtube.com") || m.includes("youtu.be")) return "<b style='color:#ff0000; font-size:1.1rem; margin-left:4px;' title='Video de YouTube'><i class='fab fa-youtube'></i></b>";
+                if (m.includes("canva.com")) return "<b style='color:#8a2be2; font-size:1.1rem; margin-left:4px;' title='Diseño de Canva'><i class='fas fa-palette'></i></b>";
+                if (m.includes("maps.google") || m.includes("goo.gl/maps")) return "<b style='color:#28a745; font-size:1.1rem; margin-left:4px;' title='Google Maps'><i class='fas fa-map-marker-alt'></i></b>";
+                if (m.includes("drive.google.com") || m.match(/\.(pdf|doc|docx|ppt|pptx|xls|xlsx|zip|rar)$/)) return "<b style='color:#f39c12; font-size:1.1rem; margin-left:4px;' title='Archivo Adjunto'><i class='fas fa-file-download'></i></b>";
+                return "<b style='color:#17a2b8; font-size:1.1rem; margin-left:4px;' title='Enlace Adjunto'><i class='fas fa-link'></i></b>";
             });
             
             return resumen;
@@ -2640,50 +2682,78 @@
             if (!text) return 'Sin detalles adicionales.';
             let html = text;
 
-            // 1. Formato de texto (Soporta **negrita**, __subrayado__, ++cursiva++)
+            // Paso 1: Limpieza total de los espacios raros <0xa0> de tu screenshot
+            html = html.replace(/\xa0/g, ' '); 
+            html = html.replace(/\[IMG\]\s+/gi, '[IMG]').replace(/\s+\[\/IMG\]/gi, '[/IMG]'); 
+            html = html.replace(/\s+([*_+][*_+])/g, ' $1').replace(/([*_+][*_+])\s+/g, '$1 '); 
+
+            // Paso 2: Proteger imágenes [IMG] sacándolas de la cadena principal
+            let imgUrls = [];
+            html = html.replace(/\[IMG\](.*?)\[\/IMG\]/gi, function(match, url) {
+                imgUrls.push(url.trim());
+                return `@@IMG_${imgUrls.length - 1}@@`;
+            });
+
+            // Paso 3: Proteger URLs sueltas (greedier, capturando query params)
+            let rawUrls = [];
+            let urlRegex = /(https?:\/\/[^\s<"']+)/gi;
+            html = html.replace(urlRegex, function(match) {
+                rawUrls.push(match.trim());
+                return `@@RAWURL_${rawUrls.length - 1}@@`;
+            });
+
+            // Paso 4: Aplicar formato de texto (Negrita, Subrayado, Cursiva)
             html = html.replace(/\*\*(.*?)\*\*/g, '<b style="color: var(--primary, #2196F3);">$1</b>');
             html = html.replace(/__(.*?)__/g, '<u>$1</u>');
             html = html.replace(/\+\+(.*?)\+\+/g, '<i>$1</i>');
 
-            // 2. Extraer URLs (compatible con Android APK)
-            let urls = [];
-            let urlRegex = /(https?:\/\/[^\s<]+)/gi;
-            html = html.replace(urlRegex, function(match, p1, offset, string) {
-                let prefijo = string.substring(Math.max(0, offset - 6), offset);
-                if (prefijo.includes('src="') || prefijo.includes("src='") || prefijo.includes('href="') || prefijo.includes("href='")) {
-                    return match; // Dejar intacto si ya es HTML
-                }
-                urls.push(match);
-                return `__URL_${urls.length - 1}__`;
-            });
-
-            // 3. Restaurar URLs como Imágenes Clickables o Enlaces de Texto
-            html = html.replace(/__URL_(\d+)__/g, function(match, i) {
-                let url = urls[i];
-                
-                // Truco maestro: Auto-convertir links de Google Drive a links directos de imagen
-                let gDriveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
-                if (gDriveMatch) {
-                    url = `https://drive.google.com/uc?id=${gDriveMatch[1]}`;
-                }
-                
-                // Detecta si es imagen por extensión o por ser link directo de Drive
-                let isImg = url.match(/\.(jpeg|jpg|gif|png|webp)/i) || url.includes("uc?id="); 
-                if (isImg) {
-                    // Si el link se rompe (ej. no era foto, era PDF), el 'onerror' lo rescata convirtiéndolo en texto clickeable
-                    return `<div style="text-align:center; margin:15px 0;"><img src="${url}" style="max-width:100%; max-height:400px; object-fit:contain; border-radius:8px; cursor:zoom-in; box-shadow:0 2px 5px rgba(0,0,0,0.3);" onclick="abrirImagenCompleta('${url}')" onerror="this.outerHTML='<a href=&quot;${url}&quot; target=&quot;_blank&quot; style=&quot;color:#2196F3; font-weight:bold;&quot;>[Abrir Archivo / PDF Adjunto]</a>'"></div>`;
+            // Paso 5: Restaurar URLs como BOTONES GRANDES segun su tipo (YouTube, Canva, PDF)
+            html = html.replace(/@@RAWURL_(\d+)@@/g, function(match, i) {
+                let url = rawUrls[i];
+                let m = url.toLowerCase();
+                if (m.includes("youtube.com") || m.includes("youtu.be")) {
+                    return `<a href="${url}" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 15px; background-color:#ff0000; color:white; border-radius:5px; text-decoration:none; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.2);"><i class="fab fa-youtube"></i> Ver Video en YouTube</a>`;
+                } else if (m.includes("canva.com")) {
+                    return `<a href="${url}" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 15px; background-color:#8a2be2; color:white; border-radius:5px; text-decoration:none; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.2);"><i class="fas fa-palette"></i> Ver Diseño en Canva</a>`;
+                } else if (m.includes("maps.google") || m.includes("goo.gl/maps")) {
+                    return `<a href="${url}" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 15px; background-color:#28a745; color:white; border-radius:5px; text-decoration:none; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.2);"><i class="fas fa-map-marker-alt"></i> Ver en Google Maps</a>`;
+                } else if (m.includes("drive.google.com") || m.match(/\.(pdf|doc|docx|ppt|pptx|xls|xlsx|zip|rar)$/i)) {
+                    return `<a href="${url}" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 15px; background-color:#f39c12; color:white; border-radius:5px; text-decoration:none; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.2);"><i class="fas fa-file-download"></i> Abrir / Descargar Archivo</a>`;
                 } else {
-                    return `<a href="${url}" target="_blank" style="color:#2196F3; text-decoration:underline; font-weight:bold; word-break:break-all;">${url}</a>`;
+                    return `<a href="${url}" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 15px; background-color:#34495e; color:white; border-radius:5px; text-decoration:none; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.2);"><i class="fas fa-external-link-alt"></i> Visitar Enlace</a>`;
                 }
             });
 
-            // 4. Limpieza de saltos de línea sin deformar tablas
+            // Paso 6: Restaurar Imágenes (SOLUCIÓN DEFINITIVA AL CRASH Y TEXTO RAW)
+            html = html.replace(/@@IMG_(\d+)@@/g, function(match, i) {
+                let url = imgUrls[i];
+                return `<div style="text-align:center; margin:15px 0;">
+                    <img src="${url}" style="max-width:100%; max-height:400px; object-fit:contain; border-radius:8px; cursor:zoom-in; box-shadow:0 2px 5px rgba(0,0,0,0.3);" onclick="abrirImagenCompleta(this.src)" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
+                    <a href="${url}" target="_blank" style="display:none; margin:5px 0; padding:8px 15px; background-color:#cc0000; color:white; border-radius:5px; text-decoration:none; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.2);"><i class="fas fa-exclamation-triangle"></i> Abrir Archivo / Enlace</a>
+                </div>`;
+            });
+
+            // Paso 7: Limpieza de saltos de línea idéntica a tu original
             html = html.replace(/\n/g, '<br>');
             html = html.replace(/(<\/?(?:table|tbody|thead|tfoot|tr|td|th)[^>]*>)<br>/gi, '$1');
             html = html.replace(/<br>(<\/?(?:table|tbody|thead|tfoot|tr|td|th)[^>]*>)/gi, '$1');
 
             return html;
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         // --- FUNCIONES DE LA BARRA DE HERRAMIENTAS DEL EDITOR ---
         function insertarFormato(prefijo, sufijo) {
@@ -2718,10 +2788,14 @@
 
         function insertarImagenUrl() {
             const urlInput = document.getElementById('url-imagen-input');
-            const url = urlInput.value.trim();
+            let url = urlInput.value.trim();
             if (url) {
-                insertarFormato("\n" + url + "\n", "");
-                urlInput.value = ""; // Limpiar casilla después de agregar
+                let gDriveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+                if (gDriveMatch) {
+                    url = `https://drive.google.com/uc?id=${gDriveMatch[1]}`;
+                }
+                insertarFormato("\n[IMG]" + url + "[/IMG]\n", "");
+                urlInput.value = ""; 
             } else {
                 alert("Por favor, pega una URL en la casilla primero.");
             }
