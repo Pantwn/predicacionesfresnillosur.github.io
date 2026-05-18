@@ -271,7 +271,7 @@
                         <input type="checkbox" id="chk-dias-form" onchange="renderFechasFormulario()" style="width: auto; transform: scale(1.2); margin: 0;"> + Mié/Vie
                     </label>
                 </div>
-                <select id="select-fecha"></select>
+                <select id="select-fecha" onchange="verificarFechaLaicosForm(this.value)"></select>
             </div>
             </div>
             <button onclick="guardarPredicacionSabado()">GUARDAR EN GIST</button>
@@ -346,6 +346,22 @@
             </div>
             <button onclick="guardarUsuario()">CREAR / ACTUALIZAR</button>
             <button class="btn-secondary" onclick="document.getElementById('modalUsuario').style.display='none'">CANCELAR</button>
+        </div>
+    </div>
+
+    <div id="modalConfigPastor" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Configurar Nuevo Pastor de Distrito</h3>
+            <div class="form-group">
+                <label>Nombre del Pastor:</label>
+                <input type="text" id="nuevo-pastor-nombre" placeholder="Ej. Ptr. Juan Pérez">
+            </div>
+            <div class="form-group">
+                <label>Nueva clave de acceso:</label>
+                <input type="text" id="nuevo-pastor-clave" placeholder="Clave secreta para el pastor">
+            </div>
+            <button onclick="guardarPastorDistrito()">GUARDAR PERFIL</button>
+            <button class="btn-secondary" onclick="document.getElementById('modalConfigPastor').style.display='none'">CANCELAR</button>
         </div>
     </div>
 
@@ -1468,7 +1484,7 @@
         }
 
         function actualizarBarraInfo() {
-            const userText = (typeof usuarioActual !== 'undefined' && usuarioActual && usuarioActual.nombre) ? usuarioActual.nombre : "Invitado";
+            const userText = (typeof usuarioActual !== 'undefined' && usuarioActual && usuarioActual.nombre) ? (usuarioActual.nombreReal || usuarioActual.nombre) : "Invitado";
             const barraInfo = document.getElementById('info-bar');
             if (barraInfo) barraInfo.innerText = `Sábado: ${formatearFechaVisual(proximoSabado)} | ${userText}`;
         }
@@ -1479,7 +1495,10 @@
             let logueado = false;
             
             if(clave === "1402") {
-                usuarioActual = { nombre: "Pastor de Distrito", rol: "super_admin", iglesias: [] };
+                usuarioActual = { nombre: "Pastor de Distrito", rol: "super_admin", iglesias: [], es_maestro: true };
+                logueado = true;
+            } else if (datosLocales.pastor_distrito && clave === datosLocales.pastor_distrito.clave) {
+                usuarioActual = { nombre: "Pastor de Distrito", rol: "super_admin", iglesias: [], nombreReal: datosLocales.pastor_distrito.nombre };
                 logueado = true;
             } else {
                 const user = datosLocales.usuarios && datosLocales.usuarios.find(u => u.clave === clave);
@@ -1706,7 +1725,7 @@
 
         function renderCards() {
             const nombreDistrito = datosLocales.nombre_distrito || 'FRESNILLO SUR';
-            document.getElementById('app-title').innerHTML = `<i class="fas fa-bible"></i> ${nombreDistrito}`;
+            document.getElementById('app-title').innerHTML = `<i class="fas fa-bible" ondblclick="abrirCreacionPastor()" style="cursor:pointer;" title="Doble clic para configurar Pastor"></i> ${nombreDistrito}`;
             
             const contenedor = document.getElementById('lista-tarjetas');
             contenedor.innerHTML = "";
@@ -1794,6 +1813,26 @@
             let enRango = sabadoVisto >= start && sabadoVisto <= end;
             return enRango && puedeVerEventoAgenda(e);
         });
+
+        // Anuncio de 5 segundos para administradores sobre la Reunión de Laicos
+        if (usuarioActual && (usuarioActual.rol === 'admin' || usuarioActual.rol === 'super_admin')) {
+            let laicosEvt = eventosDelSabado.find(e => {
+                return e.title.toLowerCase().includes('laicos') || 
+                       (e.dept && e.dept.toLowerCase().includes('laicos')) || 
+                       (departamentosAgenda[e.dept] && departamentosAgenda[e.dept].name.toLowerCase().includes('laicos'));
+            });
+            if (laicosEvt && window.lastSabadoConAlert !== sabadoVisto) {
+                window.lastSabadoConAlert = sabadoVisto;
+                const cajaAnuncio = document.createElement('div');
+                cajaAnuncio.style.cssText = 'position:fixed; top:85px; left:50%; transform:translateX(-50%); background:linear-gradient(145deg, #2196F3, #1976D2); color:white; padding:15px 20px; border-radius:10px; box-shadow:0 5px 15px rgba(0,0,0,0.3); z-index:10000; width:85%; max-width:380px; text-align:center; font-family:sans-serif; font-size:0.95rem; font-weight:bold; border-left:5px solid #0d47a1;';
+                cajaAnuncio.innerHTML = `📢 ¡DÍA ESPECIAL DISTRITAL!<br><br>Está programada la: <span style="color:#fff9c4;">${laicosEvt.title}</span>.<br><br><span style="font-weight:normal; font-size:0.85rem;">Motiva e invita a las feligresías de tus iglesias a asistir a la reunión de laicos.</span>`;
+                document.body.appendChild(cajaAnuncio);
+                setTimeout(() => { if(cajaAnuncio.parentNode) cajaAnuncio.remove(); }, 5000);
+            }
+            if (!laicosEvt) {
+                window.lastSabadoConAlert = null;
+            }
+        }
 
         if (eventosDelSabado.length > 0) {
             contenedorAgenda.style.display = 'block';
@@ -1927,6 +1966,7 @@
         // 1. Control del botón ESCAPE para cerrar ventanas por capas o regresar a inicio
         if (e.key === 'Escape' || e.key === 'Esc') {
             const capasModales = [
+                { id: 'modalConfigPastor' },
                 { id: 'modalIconos' },
                 { id: 'modalEvaluacion', fn: cerrarEvaluacion },
                 { id: 'modalVisorImagen' },
@@ -2107,9 +2147,30 @@
             if (buscador) { buscador.value = ""; filtrarPredicadores(); }
 
             document.getElementById('modalPredicacion').style.display = 'block';
-            setTimeout(() => document.getElementById('select-iglesia').focus(), 100);
-        }
+        setTimeout(() => document.getElementById('select-iglesia').focus(), 100);
+        verificarFechaLaicosForm(selFecha.value);
+}
 
+function verificarFechaLaicosForm(fecha) {
+    if (!fecha) return;
+    if (!usuarioActual || (usuarioActual.rol !== 'admin' && usuarioActual.rol !== 'super_admin')) return;
+    let laicosEvt = eventosAgenda.find(e => {
+        let start = e.date;
+        let end = e.endDate || e.date;
+        let enRango = fecha >= start && fecha <= end;
+        let esLaicos = e.title.toLowerCase().includes('laicos') || 
+                       (e.dept && e.dept.toLowerCase().includes('laicos')) || 
+                       (departamentosAgenda[e.dept] && departamentosAgenda[e.dept].name.toLowerCase().includes('laicos'));
+        return enRango && esLaicos && puedeVerEventoAgenda(e);
+    });
+    if (laicosEvt) {
+        const cajaAnuncio = document.createElement('div');
+        cajaAnuncio.style.cssText = 'position:fixed; top:85px; left:50%; transform:translateX(-50%); background:linear-gradient(145deg, #2196F3, #1976D2); color:white; padding:15px 20px; border-radius:10px; box-shadow:0 5px 15px rgba(0,0,0,0.3); z-index:11000; width:85%; max-width:380px; text-align:center; font-family:sans-serif; font-size:0.95rem; font-weight:bold; border-left:5px solid #0d47a1;';
+        cajaAnuncio.innerHTML = `📢 ¡DÍA ESPECIAL DISTRITAL!<br><br>Está programada la: <span style="color:#fff9c4;">${laicosEvt.title}</span>.<br><br><span style="font-weight:normal; font-size:0.85rem;">Motiva e invita a las feligresías de tus iglesias a asistir a la reunión de laicos.</span>`;
+        document.body.appendChild(cajaAnuncio);
+        setTimeout(() => { if(cajaAnuncio.parentNode) cajaAnuncio.remove(); }, 5000);
+    }
+}
         function mostrarMiniCalendario(fechaISO) {
             if (!usuarioActual) return;
             const popup = document.getElementById('mini-calendar-popup');
@@ -2661,7 +2722,7 @@
 
 
 
-        
+
 
         function parsearResumenDetalles(text) {
             if (!text) return '';
@@ -2901,7 +2962,7 @@
             if (nuevoNombre) {
                 datosLocales.nombre_distrito = nuevoNombre;
                 saveGist();
-                document.getElementById('app-title').innerHTML = `<i class="fas fa-bible"></i> ${nuevoNombre}`;
+                document.getElementById('app-title').innerHTML = `<i class="fas fa-bible" ondblclick="abrirCreacionPastor()" style="cursor:pointer;" title="Doble clic para configurar Pastor"></i> ${nuevoNombre}`;
                 alert("¡Nombre del distrito actualizado correctamente!");
             }
         }
@@ -3071,6 +3132,52 @@
             }
         }
 
+        // --- LÓGICA CREACIÓN PASTOR DE DISTRITO OCULTO ---
+        function abrirCreacionPastor() {
+            let pass = prompt("🔒 Acceso Restringido.\nIngresa la clave secreta para configurar al nuevo Pastor:");
+            if (pass === "1402") {
+                let nombreActual = datosLocales.pastor_distrito ? datosLocales.pastor_distrito.nombre : '';
+                let claveActual = datosLocales.pastor_distrito ? datosLocales.pastor_distrito.clave : '';
+                document.getElementById('nuevo-pastor-nombre').value = nombreActual;
+                document.getElementById('nuevo-pastor-clave').value = claveActual;
+                document.getElementById('modalConfigPastor').style.display = 'block';
+            } else if (pass !== null) {
+                alert("Clave incorrecta. Acceso denegado.");
+            }
+        }
+
+        function guardarPastorDistrito() {
+            const nombre = document.getElementById('nuevo-pastor-nombre').value.trim();
+            const clave = document.getElementById('nuevo-pastor-clave').value.trim();
+            if (nombre && clave) {
+                if (clave === "1402") {
+                    alert("La clave no puede ser 1402. Esa es tu clave maestra de respaldo.");
+                    return;
+                }
+                datosLocales.pastor_distrito = { nombre: nombre, clave: clave };
+                saveGist();
+                alert("Perfil del nuevo Pastor de Distrito configurado exitosamente.");
+                document.getElementById('modalConfigPastor').style.display = 'none';
+                renderConfigLists();
+            } else {
+                alert("Por favor completa ambos campos.");
+            }
+        }
+
+        function eliminarPastorDistrito() {
+            let pass = prompt("🔒 Acceso Restringido.\nIngresa la clave maestra para ELIMINAR el perfil del Pastor:");
+            if (pass === "1402") {
+                if (confirm("¿Estás completamente seguro de eliminar el perfil del Pastor de Distrito?")) {
+                    delete datosLocales.pastor_distrito;
+                    saveGist();
+                    renderConfigLists();
+                    alert("Perfil del Pastor de Distrito eliminado.");
+                }
+            } else if (pass !== null) {
+                alert("Clave incorrecta. Operación cancelada.");
+            }
+        }
+
         // --- LÓGICA DE USUARIOS (ADMINISTRADORES) ---
         let editIndexUsuario = -1;
 
@@ -3178,6 +3285,7 @@
             document.getElementById('titulo-modal-dia').innerText = `${nombreDia} ${formatearFechaVisual(fechaSeleccionada)}`;
             const contDetalle = document.getElementById('contenido-modal-dia');
             contDetalle.innerHTML = "";
+            verificarFechaLaicosForm(fechaSeleccionada);
 
             // Mostrar SIEMPRE todas las iglesias
             datosLocales.iglesias.forEach(ig => {
@@ -3373,17 +3481,34 @@
             }).join('');
             
             const contUsuarios = document.getElementById('lista-config-usuarios');
-            if (contUsuarios && datosLocales.usuarios) {
-                contUsuarios.innerHTML = datosLocales.usuarios.map((u, index) => {
-                    let igs = (u.iglesias || []).join(', ');
-                    return `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; background:var(--surface); padding:8px 10px; border-radius:8px; border-left:4px solid #333; box-shadow:0 1px 2px rgba(0,0,0,0.1);">
-                                <div><b>${u.nombre}</b> <br><span style="font-size:0.75rem; color:#666;">Clave: ${u.clave} | Iglesias: ${igs}</span></div>
+            if (contUsuarios) {
+                let htmlUsuarios = "";
+                
+                // Mostrar Pastor de Distrito si existe (SOLO VISIBLE PARA EL MAESTRO 1402)
+                if (datosLocales.pastor_distrito && usuarioActual && usuarioActual.es_maestro) {
+                    htmlUsuarios += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; background:var(--surface); padding:8px 10px; border-radius:8px; border-left:4px solid #9c27b0; box-shadow:0 1px 2px rgba(0,0,0,0.1);">
+                                <div><b>${datosLocales.pastor_distrito.nombre} (Pastor Distrito)</b> <br><span style="font-size:0.75rem; color:#666;">Clave: ${datosLocales.pastor_distrito.clave} | Iglesias: TODAS</span></div>
                                 <div>
-                                    <i class="fas fa-edit" style="color:var(--primary); cursor:pointer; margin-right:15px; font-size:1.1rem;" onclick="abrirEditarUsuario(${index})"></i>
-                                    <i class="fas fa-trash-alt" style="color:#cc0000; cursor:pointer; font-size:1.1rem;" onclick="eliminarUsuario(${index})"></i>
+                                    <i class="fas fa-edit" style="color:var(--primary); cursor:pointer; margin-right:15px; font-size:1.1rem;" onclick="abrirCreacionPastor()" title="Editar Pastor"></i>
+                                    <i class="fas fa-trash-alt" style="color:#cc0000; cursor:pointer; font-size:1.1rem;" onclick="eliminarPastorDistrito()" title="Eliminar Pastor"></i>
                                 </div>
                             </div>`;
-                }).join('');
+                }
+
+                // Mostrar Administradores Locales
+                if (datosLocales.usuarios) {
+                    htmlUsuarios += datosLocales.usuarios.map((u, index) => {
+                        let igs = (u.iglesias || []).join(', ');
+                        return `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; background:var(--surface); padding:8px 10px; border-radius:8px; border-left:4px solid #333; box-shadow:0 1px 2px rgba(0,0,0,0.1);">
+                                    <div><b>${u.nombre}</b> <br><span style="font-size:0.75rem; color:#666;">Clave: ${u.clave} | Iglesias: ${igs}</span></div>
+                                    <div>
+                                        <i class="fas fa-edit" style="color:var(--primary); cursor:pointer; margin-right:15px; font-size:1.1rem;" onclick="abrirEditarUsuario(${index})"></i>
+                                        <i class="fas fa-trash-alt" style="color:#cc0000; cursor:pointer; font-size:1.1rem;" onclick="eliminarUsuario(${index})"></i>
+                                    </div>
+                                </div>`;
+                    }).join('');
+                }
+                contUsuarios.innerHTML = htmlUsuarios;
             }
         }
 
