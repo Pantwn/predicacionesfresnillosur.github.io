@@ -347,6 +347,14 @@
                     <div><span class="tag-predicador color-pastor_distrito" style="margin:0;">Morado</span> = Pastor de Distrito</div>
                 </div>
                 <div id="seccion-atajos-leyenda" style="display:none; border-top:1px solid #ccc; padding-top:10px; margin-bottom:15px;">
+                    <h4 style="margin:0 0 8px 0; color:#333;"><i class="fas fa-user-shield"></i> Permisos de Administrador</h4>
+                    <div style="font-size:0.85rem; color:#555; display:flex; flex-direction:column; gap:5px; text-align:left; margin-bottom:15px;">
+                        <div><b>•</b> Asignar predicaciones en tus iglesias.</div>
+                        <div><b>•</b> Agregar nuevos predicadores locales.</div>
+                        <div><b>•</b> Editar o Eliminar TUS asignaciones.</div>
+                        <div><b>•</b> Consultar Calendario y Agenda Distrital.</div>
+                        <div><b>•</b> Ver eventos ocultos para usuarios normales.</div>
+                    </div>
                     <h4 style="margin:0 0 8px 0; color:#333;"><i class="fas fa-keyboard"></i> Atajos de Teclado (Admins)</h4>
                     <div style="font-size:0.85rem; color:#555; display:flex; flex-direction:column; gap:5px; text-align:left;">
                         <div><b>Tecla [-]:</b> Registrar Nuevo Predicador</div>
@@ -488,6 +496,23 @@
             
             <button class="btn-add-agenda" id="btn-add-agenda" onclick="abrirFormularioAgenda()">+ AGREGAR ACTIVIDAD A KALENDER</button>
             <button class="btn-secondary" onclick="document.getElementById('modalAgendaCompleta').style.display='none'">CERRAR</button>
+        </div>
+    </div>
+
+    <div id="modalDetalleEvento" class="modal-overlay modal-fullscreen" style="z-index: 1200;">
+        <div class="modal-content" style="background:#f4f6f9;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px;">
+                <h3 id="detalle-evt-titulo" style="margin:0; color:#2c3e50; font-size:1.3rem;"></h3>
+                <button onclick="document.getElementById('modalDetalleEvento').style.display='none'" style="background:transparent; color:#333; box-shadow:none; width:auto; padding:0 5px; margin:0; font-size:1.5rem;"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="contenido-scroll" style="background:white; padding:15px; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                <div id="detalle-evt-dept" style="display:inline-block; color:white; padding:4px 10px; border-radius:15px; font-weight:bold; font-size:0.8rem; margin-bottom:10px; text-transform:uppercase;"></div>
+                <div id="detalle-evt-fecha" style="font-size:0.9rem; color:#555; margin-bottom:15px; font-weight:bold;"></div>
+                <div style="border-top:1px solid #eee; padding-top:15px;">
+                    <b style="color:#333; font-size:0.95rem;">Detalles:</b>
+                    <p id="detalle-evt-desc" style="font-size:0.95rem; color:#555; line-height:1.5; word-wrap:break-word;"></p>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -649,9 +674,53 @@
                         eventosAgenda = data.eventos || [];
                         departamentosAgenda = data.departamentos || {};
                         if(document.getElementById('mainScreen').classList.contains('active')) renderCards();
+                        
+                        if (!window.recordatoriosMostrados) {
+                            mostrarRecordatoriosDestacados();
+                            window.recordatoriosMostrados = true;
+                        }
                     }
                 }
             } catch (e) { console.log("Modo offline para agenda distrital"); }
+        }
+
+        function mostrarRecordatoriosDestacados() {
+            const hoy = new Date().toISOString().split('T')[0];
+            let destacados = eventosAgenda.filter(e => e.destacado && (e.endDate ? e.endDate >= hoy : e.date >= hoy) && puedeVerEventoAgenda(e));
+            
+            if (destacados.length > 0) {
+                const overlay = document.createElement('div');
+                overlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9998; backdrop-filter:blur(3px);';
+                
+                const box = document.createElement('div');
+                box.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:linear-gradient(145deg, #fff9c4, #f1c40f); color:#333; padding:20px; border-radius:15px; box-shadow:0 10px 25px rgba(0,0,0,0.5), 0 0 20px rgba(241,196,15,0.6); z-index:9999; width:90%; max-width:400px; text-align:center; animation: parpadeoElegante 2s infinite; cursor:pointer; border:2px solid #d4af37;';
+                
+                let listaHTML = destacados.map(d => {
+                    let dept = departamentosAgenda[d.dept] || { name: "General", color: "#57606f", icon: "fas fa-calendar-check" };
+                    return `<div onclick="abrirDetalleEvento('${d.id}')" style="margin-bottom:10px; background:rgba(255,255,255,0.85); padding:10px; border-radius:8px; border-left: 5px solid ${dept.color}; text-align: left; cursor:pointer; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+                        <div style="font-size:0.7rem; background-color:${dept.color}; color:white; padding:3px 8px; border-radius:12px; font-weight:bold; display:inline-block; margin-bottom:5px;"><i class="${dept.icon}"></i> ${dept.name}</div>
+                        <div style="font-weight:bold; font-size:0.95rem; color:#333;">${d.title}</div>
+                        <div style="font-size:0.85rem; color:#555; margin-top:3px;"><i class="far fa-calendar-alt"></i> ${formatearFechaVisual(d.date)}</div>
+                    </div>`;
+                }).join('');
+                
+                box.innerHTML = `<h3 style="margin-top:0; color:#d35400; font-weight:900;"><i class="fas fa-star" style="color:#f39c12; text-shadow:0 0 5px #fff;"></i> EVENTOS IMPORTANTES</h3>
+                                 <p style="font-size:0.9rem; font-weight:bold; margin-bottom:15px;">¡Prepárate! No olvides estas actividades:</p>
+                                 <div style="max-height:40vh; overflow-y:auto; text-align:left;">${listaHTML}</div>
+                                 <small style="display:block; margin-top:15px; font-weight:bold; color:#7f8c8d;">(Toca aquí o fuera para cerrar)</small>`;
+                
+                document.body.appendChild(overlay);
+                document.body.appendChild(box);
+                
+                const cerrar = () => {
+                    if(overlay.parentNode) overlay.remove();
+                    if(box.parentNode) box.remove();
+                };
+                
+                overlay.onclick = cerrar;
+                box.onclick = cerrar;
+                setTimeout(cerrar, 8000);
+            }
         }
 
         const himnario = {
@@ -1385,7 +1454,34 @@
                 
                 actualizarBarraInfo();
 
+                if (usuarioActual.rol === 'admin') {
+                    const overlayWrap = document.createElement('div');
+                    overlayWrap.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; z-index:9998;';
+                    const msg = document.createElement('div');
+                    msg.style.cssText = 'position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#28a745; color:white; padding:15px 20px; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.3); z-index:9999; width:90%; max-width:400px; text-align:center; font-size:0.9rem; cursor:pointer;';
+                    msg.innerHTML = `<b><i class="fas fa-user-shield"></i> ¡Bienvenido Administrador!</b><br><br>
+                        <div style="text-align:left; font-size:0.85rem; line-height:1.4;">
+                            • Asignar predicaciones en tus iglesias.<br>
+                            • Agregar nuevos predicadores locales.<br>
+                            • Editar/Eliminar TUS asignaciones.<br>
+                            • Consultar Calendario y Agenda Distrital.<br>
+                            • Ver eventos ocultos a usuarios normales.
+                        </div><br><small style="font-size:0.7rem; opacity:0.8;">(Toca aquí o fuera para cerrar)</small>`;
+                    
+                    document.body.appendChild(overlayWrap);
+                    document.body.appendChild(msg);
 
+                    const cerrarMensaje = () => {
+                        if (msg.parentNode) msg.remove();
+                        if (overlayWrap.parentNode) overlayWrap.remove();
+                    };
+
+                    msg.onclick = cerrarMensaje;
+                    overlayWrap.onclick = cerrarMensaje;
+                    setTimeout(cerrarMensaje, 10000);
+                }
+
+                mostrarRecordatoriosDestacados();
 
                 showScreen('mainScreen');
             } else {
@@ -1659,11 +1755,23 @@
                     
                     let visIconos = esFamPastoral ? `<i class="fas fa-lock text-danger" title="Estrictamente Privado" style="margin-right:15px;"></i>` : `<i class="fas ${verUsers}" onclick="toggleVisibilidadAgenda('${evt.id}', 'users')" title="Visible Usuarios" style="cursor:pointer; font-size:1.1rem; margin-right:8px;"></i><i class="fas ${verAdmins}" onclick="toggleVisibilidadAgenda('${evt.id}', 'admins')" title="Visible Admins" style="cursor:pointer; font-size:1.1rem; margin-right:15px;"></i>`;
                     
+                    let starClass = evt.destacado ? 'fas fa-star' : 'far fa-star';
+                    let starColor = evt.destacado ? '#ffd700' : '#ccc';
+                    let starShadow = evt.destacado ? 'drop-shadow(0 0 5px rgba(255,215,0,0.8))' : 'none';
+                    let btnStar = `<i class="${starClass}" style="color:${starColor}; filter:${starShadow}; cursor:pointer; font-size:1.2rem; margin-right:15px; transition:0.3s;" onclick="toggleDestacadoAgenda('${evt.id}')" title="Destacar Evento"></i>`;
+
                     adminTools = `
                     <div style="display:flex; align-items:center;">
+                        ${btnStar}
                         ${visIconos}
                         <i class="fas fa-edit" style="color:var(--primary); cursor:pointer; font-size:1.1rem;" onclick="abrirFormularioAgenda('${evt.id}')"></i>
                     </div>`;
+                } else if (usuarioActual && usuarioActual.rol === 'admin') {
+                    let visCheck = evt.visibilidad || 'todos';
+                    if (evt.dept === 'familia-pastoral') visCheck = 'privado';
+                    if (visCheck !== 'todos') {
+                        adminTools = `<div style="display:flex; align-items:center;"><i class="fas fa-eye" style="color: #ffd700; animation: ojoVivo 1.5s ease-in-out infinite; font-size:1.2rem;" title="Privilegio Admin: Actividad Oculta a Usuarios"></i></div>`;
+                    }
                 }
 
                 return `
@@ -1766,6 +1874,7 @@
             const capasModales = [
                 { id: 'modalIconos' },
                 { id: 'modalEvaluacion', fn: cerrarEvaluacion },
+                { id: 'modalDetalleEvento' },
                 { id: 'modalListaAgendaPastor' },
                 { id: 'modalGestionAgenda' },
                 { id: 'modalAgendaCompleta' },
@@ -1904,7 +2013,8 @@
             const selPredicador = document.getElementById('select-predicador');
             const selFecha = document.getElementById('select-fecha');
             
-            selIglesia.innerHTML = datosLocales.iglesias.map(i => `<option value="${i.nombre}">${i.nombre}</option>`).join('');
+            let iglesiasPermitidasForm = (usuarioActual && usuarioActual.rol === 'super_admin') ? datosLocales.iglesias : datosLocales.iglesias.filter(i => usuarioActual && usuarioActual.iglesias && usuarioActual.iglesias.includes(i.nombre));
+            selIglesia.innerHTML = iglesiasPermitidasForm.map(i => `<option value="${i.nombre}">${i.nombre}</option>`).join('');
             
             // Administradores solo ven sus propios predicadores. Super Admin ve todos.
             let predicadoresPermitidos = usuarioActual && usuarioActual.rol === 'super_admin' ? datosLocales.predicadores_lista : datosLocales.predicadores_lista.filter(p => p.tipo !== 'pastor_distrito' && usuarioActual && usuarioActual.iglesias.includes(p.iglesia));
@@ -2068,7 +2178,8 @@
                             innerCont = `<i class="${dept.icon}" style="margin-right: 5px;"></i> <span style="font-size: 0.8rem; font-weight: bold; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${evt.title}</span>`;
                         }
                         
-                        return `<div class="evt-badge" style="${extraStyles}" title="${evt.title}" ${clickAttr}>${innerCont}</div>`;
+                        let dblClickAttr = `ondblclick="abrirDetalleEvento('${evt.id}')"`;
+                        return `<div class="evt-badge" style="${extraStyles}" title="${evt.title} (Doble clic para ver)" ${clickAttr} ${dblClickAttr}>${innerCont}</div>`;
                     } else {
                         return `<div style="height: 20px; opacity: 0; pointer-events: none; margin-top: 2px;"></div>`;
                     }
@@ -2178,17 +2289,25 @@
                 // Iconos de permisos con animación y estilos metálicos
                 let verUsers = (visActual === 'todos') ? 'fa-eye ojo-on' : 'fa-eye-slash ojo-off';
                 let verAdmins = (visActual === 'todos' || visActual === 'admins') ? 'fa-eye ojo-on' : 'fa-eye-slash ojo-off';
+                
+                let starClass = evt.destacado ? 'fas fa-star' : 'far fa-star';
+                let starColor = evt.destacado ? '#ffd700' : '#ccc';
+                let starShadow = evt.destacado ? 'drop-shadow(0 0 4px rgba(255,215,0,0.8))' : 'none';
 
                 let actions = esFamPastoral ? 
-                    `<i class="fas fa-lock text-danger" style="font-size:1.4rem;" title="Estrictamente Privado"></i>` :
+                    `<i class="fas fa-lock text-danger" style="font-size:1.2rem;" title="Estrictamente Privado"></i>` :
                     `
                     <div style="display:flex; flex-direction:column; align-items:center; gap:2px;">
-                        <i class="fas ${verUsers}" style="font-size:1.4rem; cursor:pointer; padding:4px;" onclick="toggleVisibilidadAgenda('${evt.id}', 'users')" title="Visible para Usuarios"></i>
-                        <span style="font-size:0.6rem; color:#666; font-weight:bold;">Users</span>
+                        <i class="${starClass}" style="font-size:1.2rem; cursor:pointer; padding:4px; color:${starColor}; filter:${starShadow}; transition:0.3s;" onclick="toggleDestacadoAgenda('${evt.id}')" title="Destacar Evento"></i>
+                        <span style="font-size:0.55rem; color:#666; font-weight:bold;">Destacar</span>
                     </div>
-                    <div style="display:flex; flex-direction:column; align-items:center; gap:2px; margin-left:15px;">
-                        <i class="fas ${verAdmins}" style="font-size:1.4rem; cursor:pointer; padding:4px;" onclick="toggleVisibilidadAgenda('${evt.id}', 'admins')" title="Visible para Admins"></i>
-                        <span style="font-size:0.6rem; color:#666; font-weight:bold;">Admins</span>
+                    <div style="display:flex; flex-direction:column; align-items:center; gap:2px; margin-left:10px;">
+                        <i class="fas ${verUsers}" style="font-size:1.2rem; cursor:pointer; padding:4px;" onclick="toggleVisibilidadAgenda('${evt.id}', 'users')" title="Visible para Usuarios"></i>
+                        <span style="font-size:0.55rem; color:#666; font-weight:bold;">Users</span>
+                    </div>
+                    <div style="display:flex; flex-direction:column; align-items:center; gap:2px; margin-left:10px;">
+                        <i class="fas ${verAdmins}" style="font-size:1.2rem; cursor:pointer; padding:4px;" onclick="toggleVisibilidadAgenda('${evt.id}', 'admins')" title="Visible para Admins"></i>
+                        <span style="font-size:0.55rem; color:#666; font-weight:bold;">Admins</span>
                     </div>`;
 
 
@@ -2209,6 +2328,16 @@
             }).join('');
 
             contenedor.innerHTML = htmlLista;
+        }
+
+        function toggleDestacadoAgenda(id) {
+            let evt = eventosAgenda.find(e => e.id === id);
+            if (!evt) return;
+            evt.destacado = !evt.destacado;
+            renderListaAgendaPastor();
+            renderAgendaCompleta();
+            renderCards();
+            subirCambiosKalender();
         }
 
         function toggleVisibilidadAgenda(id, type) {
@@ -2397,9 +2526,12 @@
 
             if (id) {
                 const index = eventosAgenda.findIndex(e => e.id == id);
-                if (index !== -1) eventosAgenda[index] = { id, date, endDate, title, dept, details, visibilidad };
+                if (index !== -1) {
+                    let oldDestacado = eventosAgenda[index].destacado || false;
+                    eventosAgenda[index] = { id, date, endDate, title, dept, details, visibilidad, destacado: oldDestacado };
+                }
             } else {
-                eventosAgenda.push({ id: Date.now().toString(), date, endDate, title, dept, details, visibilidad });
+                eventosAgenda.push({ id: Date.now().toString(), date, endDate, title, dept, details, visibilidad, destacado: false });
             }
             
             document.getElementById('modalGestionAgenda').style.display = 'none';
@@ -2417,6 +2549,35 @@
                 renderCards();
                 subirCambiosKalender();
             }
+        }
+
+        function urlify(text) {
+            const urlRegex = /(https?:\/\/[^\s]+)/g;
+            return text.replace(urlRegex, function(url) {
+                return `<a href="${url}" target="_blank" style="color:#2196F3; text-decoration:underline;">${url}</a>`;
+            });
+        }
+
+        function abrirDetalleEvento(id) {
+            const evt = eventosAgenda.find(e => e.id == id);
+            if (!evt) return;
+            
+            let dept = departamentosAgenda[evt.dept] || { name: "General", color: "#57606f", icon: "fas fa-calendar-check" };
+            
+            document.getElementById('detalle-evt-titulo').innerText = evt.title;
+            document.getElementById('detalle-evt-dept').innerHTML = `<i class="${dept.icon}"></i> ${dept.name}`;
+            document.getElementById('detalle-evt-dept').style.backgroundColor = dept.color;
+            
+            let fechas = formatearFechaVisual(evt.date);
+            if(evt.endDate && evt.endDate !== evt.date) {
+                fechas += " al " + formatearFechaVisual(evt.endDate);
+            }
+            document.getElementById('detalle-evt-fecha').innerHTML = `<i class="far fa-calendar-alt"></i> ${fechas}`;
+            
+            let desc = evt.details ? urlify(evt.details.replace(/\n/g, '<br>')) : 'Sin detalles adicionales.';
+            document.getElementById('detalle-evt-desc').innerHTML = desc;
+            
+            document.getElementById('modalDetalleEvento').style.display = 'block';
         }
 
         function quitarAcentosExtremo(texto) {
@@ -2525,7 +2686,8 @@
             editIndexPredicador = -1;
             document.getElementById('nuevo-predicador').value = '';
             const selIglesiaPred = document.getElementById('nueva-iglesia-predicador');
-            selIglesiaPred.innerHTML = datosLocales.iglesias.map(i => `<option value="${i.nombre}">${i.nombre}</option>`).join('');
+            let iglesiasPermitidasPred = (usuarioActual && usuarioActual.rol === 'super_admin') ? datosLocales.iglesias : datosLocales.iglesias.filter(i => usuarioActual && usuarioActual.iglesias && usuarioActual.iglesias.includes(i.nombre));
+            selIglesiaPred.innerHTML = iglesiasPermitidasPred.map(i => `<option value="${i.nombre}">${i.nombre}</option>`).join('');
             Array.from(document.getElementById('nuevo-tipo').options).forEach(opt => {
                 if (opt.value === 'pastor_distrito') opt.style.display = (usuarioActual && usuarioActual.rol === 'super_admin') ? 'block' : 'none';
             });
@@ -2545,7 +2707,8 @@
             document.getElementById('nuevo-tipo').value = pr.tipo;
             
             const selIglesiaPred = document.getElementById('nueva-iglesia-predicador');
-            selIglesiaPred.innerHTML = datosLocales.iglesias.map(i => `<option value="${i.nombre}">${i.nombre}</option>`).join('');
+            let iglesiasPermitidasPred = (usuarioActual && usuarioActual.rol === 'super_admin') ? datosLocales.iglesias : datosLocales.iglesias.filter(i => usuarioActual && usuarioActual.iglesias && usuarioActual.iglesias.includes(i.nombre));
+            selIglesiaPred.innerHTML = iglesiasPermitidasPred.map(i => `<option value="${i.nombre}">${i.nombre}</option>`).join('');
             if(pr.iglesia) { selIglesiaPred.value = pr.iglesia; }
             
             verificarTipoPredicador();
