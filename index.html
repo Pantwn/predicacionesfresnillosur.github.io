@@ -2820,7 +2820,11 @@
             document.getElementById('detalle-evt-desc').innerHTML = parsearDetalles(evt.details);
             
             document.getElementById('modalDetalleEvento').style.display = 'block';
+            document.querySelector('#modalDetalleEvento .contenido-scroll').scrollTop = 0;
         }
+
+
+
 
         function quitarAcentosExtremo(texto) {
 
