@@ -378,8 +378,8 @@
                     <div><span class="tag-predicador color-pastor_distrito" style="margin:0;">Morado</span> = Pastor de Distrito</div>
                 </div>
                 <div id="seccion-atajos-leyenda" style="display:none; border-top:1px solid #ccc; padding-top:10px; margin-bottom:15px;">
-                    <h4 style="margin:0 0 8px 0; color:#333;"><i class="fas fa-user-shield"></i> Permisos de Administrador</h4>
-                    <div style="font-size:0.85rem; color:#555; display:flex; flex-direction:column; gap:5px; text-align:left; margin-bottom:15px;">
+                    <h4 style="margin:0 0 8px 0; color:#333;"><i class="fas fa-user-shield"></i> Mis Permisos</h4>
+                    <div id="lista-permisos-leyenda" style="font-size:0.85rem; color:#555; display:flex; flex-direction:column; gap:5px; text-align:left; margin-bottom:15px;">
                         <div><b>•</b> Asignar predicaciones en tus iglesias.</div>
                         <div><b>•</b> Agregar nuevos predicadores locales.</div>
                         <div><b>•</b> Editar o Eliminar TUS asignaciones.</div>
@@ -1522,18 +1522,30 @@
                 
                 actualizarBarraInfo();
 
-                if (usuarioActual.rol === 'admin') {
+                if (usuarioActual.rol === 'admin' || usuarioActual.rol === 'super_admin') {
+                    let listaPermisos = "";
+                    let listaPermisosLeyenda = "";
+                    if (usuarioActual.es_maestro) {
+                        listaPermisos = `• <b>Control Total (Modo Creador).</b><br>• Crear, editar y eliminar el perfil del Pastor de Distrito.<br>• Gestión integral de iglesias, usuarios administradores y padrón de predicadores.<br>• Control absoluto sobre la Agenda Distrital (Kalender).<br>• Evaluar asistencia, registrar sermones y administrar el sistema completo.`;
+                        listaPermisosLeyenda = `<div><b>•</b> <b>Control Total (Modo Creador).</b></div><div><b>•</b> Crear, editar y eliminar el perfil del Pastor de Distrito.</div><div><b>•</b> Gestión integral de iglesias, usuarios administradores y padrón de predicadores.</div><div><b>•</b> Control absoluto sobre la Agenda Distrital (Kalender).</div><div><b>•</b> Evaluar asistencia, registrar sermones y administrar el sistema completo.</div>`;
+                    } else if (usuarioActual.rol === 'super_admin') {
+                        listaPermisos = `• <b>Gestión Integral:</b> Asignar, editar y administrar a todos los predicadores en todas las iglesias.<br>• <b>Evaluación de Asistencia:</b> Registrar cumplimientos y detallar "Mi Participación" (sermón e himnos).<br>• <b>Control de Kalender:</b> Crear, modificar y eliminar actividades oficiales de la agenda distrital.<br>• <b>Visibilidad Avanzada:</b> Gestionar privacidad de eventos (Públicos, Administradores, Privados).<br>• <b>Alertas y Eventos:</b> Destacar actividades y agendar la reunión del "Club de Laicos".<br>• <b>Ajustes Masivos:</b> Acceso a la Lista de Actividades para cambios rápidos de visualización.<br>• <b>Privacidad Pastoral:</b> Uso exclusivo y confidencial del departamento "Familia Pastoral".<br>• <span style="color:#ffeb3b; font-weight:bold;">Nota de Seguridad: No puedes crear ni eliminar tu propio perfil (Acción exclusiva del Creador).</span>`;
+                        listaPermisosLeyenda = `<div><b>•</b> <b>Gestión Integral:</b> Asignar, editar y administrar a todos los predicadores en todas las iglesias.</div><div><b>•</b> <b>Evaluación de Asistencia:</b> Registrar cumplimientos y detallar "Mi Participación" (sermón e himnos).</div><div><b>•</b> <b>Control de Kalender:</b> Crear, modificar y eliminar actividades oficiales de la agenda distrital.</div><div><b>•</b> <b>Visibilidad Avanzada:</b> Gestionar privacidad de eventos (Públicos, Administradores, Privados).</div><div><b>•</b> <b>Alertas y Eventos:</b> Destacar actividades y agendar la reunión del "Club de Laicos".</div><div><b>•</b> <b>Ajustes Masivos:</b> Acceso a la Lista de Actividades para cambios rápidos de visualización.</div><div><b>•</b> <b>Privacidad Pastoral:</b> Uso exclusivo y confidencial del departamento "Familia Pastoral".</div><div><b>•</b> <span style="color:#cc0000; font-weight:bold;">Nota de Seguridad: No puedes crear ni eliminar tu propio perfil (Acción exclusiva del Creador).</span></div>`;
+                    } else {
+                        listaPermisos = `• Asignar predicaciones en tus iglesias.<br>• Agregar nuevos predicadores locales.<br>• Editar/Eliminar TUS asignaciones.<br>• Consultar Calendario y Agenda Distrital.<br>• Ver eventos ocultos a usuarios normales.`;
+                        listaPermisosLeyenda = `<div><b>•</b> Asignar predicaciones en tus iglesias.</div><div><b>•</b> Agregar nuevos predicadores locales.</div><div><b>•</b> Editar o Eliminar TUS asignaciones.</div><div><b>•</b> Consultar Calendario y Agenda Distrital.</div><div><b>•</b> Ver eventos ocultos para usuarios normales.</div>`;
+                    }
+
+                    const elLeyenda = document.getElementById('lista-permisos-leyenda');
+                    if(elLeyenda) elLeyenda.innerHTML = listaPermisosLeyenda;
+
                     const overlayWrap = document.createElement('div');
                     overlayWrap.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; z-index:9998;';
                     const msg = document.createElement('div');
                     msg.style.cssText = 'position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#28a745; color:white; padding:15px 20px; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.3); z-index:9999; width:90%; max-width:400px; text-align:center; font-size:0.9rem; cursor:pointer;';
-                    msg.innerHTML = `<b><i class="fas fa-user-shield"></i> ¡Bienvenido Administrador!</b><br><br>
+                    msg.innerHTML = `<b><i class="fas fa-user-shield"></i> ¡Bienvenido ${usuarioActual.nombreReal || usuarioActual.nombre}!</b><br><br>
                         <div style="text-align:left; font-size:0.85rem; line-height:1.4;">
-                            • Asignar predicaciones en tus iglesias.<br>
-                            • Agregar nuevos predicadores locales.<br>
-                            • Editar/Eliminar TUS asignaciones.<br>
-                            • Consultar Calendario y Agenda Distrital.<br>
-                            • Ver eventos ocultos a usuarios normales.
+                            ${listaPermisos}
                         </div><br><small style="font-size:0.7rem; opacity:0.8;">(Toca aquí o fuera para cerrar)</small>`;
                     
                     document.body.appendChild(overlayWrap);
