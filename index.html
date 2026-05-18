@@ -74,6 +74,14 @@
         .ojo-on { background: linear-gradient(145deg, #2ecc71, #27ae60); -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: ojoVivo 1.5s ease-in-out infinite; }
         .ojo-off { color: #95a5a6 !important; opacity: 0.6; }
 
+        /* Estilos de Tabla Dinámica (No Acta) */
+        .custom-table-format { width: 100%; border-collapse: separate; border-spacing: 0; margin: 10px 0; font-size: 0.9em; border: 1px solid #2196F3; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .custom-table-format th, .custom-table-format td { border-bottom: 1px solid #2196F3; border-right: 1px solid #2196F3; padding: 8px; text-align: left; }
+        .custom-table-format th:last-child, .custom-table-format td:last-child { border-right: none; }
+        .custom-table-format tr:last-child td { border-bottom: none; }
+        .custom-table-format th { background-color: #2196F3; color: white; text-transform: uppercase; font-weight: 800; }
+        .custom-table-format tr:nth-child(even) { background-color: #f4f6f9; }
+
         /* Grid Agenda Completa */
 
 
@@ -516,7 +524,37 @@
         </div>
     </div>
 
-    <div id="modalGestionAgenda" class="modal-overlay" style="z-index: 1100;">
+    <div id="modalVisorImagen" class="modal-overlay" style="z-index: 9999; background: rgba(0,0,0,0.9);" onclick="this.style.display='none'">
+        <span style="position:absolute; top:20px; right:30px; color:white; font-size:35px; cursor:pointer;">&times;</span>
+        <img id="visor-img-src" style="display:block; max-width:95%; max-height:95%; margin:auto; position:relative; top:50%; transform:translateY(-50%); border-radius:8px;">
+    </div>
+
+    <div id="modalEditorDetalles" class="modal-overlay modal-fullscreen" style="z-index: 1150;">
+        <div class="modal-content">
+            <h3 style="margin-top:0;"><i class="fas fa-edit"></i> Editor de Detalles</h3>
+            <div class="contenido-scroll" style="display: flex; flex-direction: column;">
+                <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; background:#f1f5f9; padding:8px; border-radius:5px 5px 0 0; border:1px solid #ccc; border-bottom:none;">
+                    <div style="display:flex; gap:4px;">
+                        <button type="button" title="Negrita (*)" onclick="insertarFormato('**', '**')" style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; padding:0; background:white; color:#333; border:1px solid #ccc; border-radius:4px; font-weight:bold; box-shadow:none; margin:0; cursor:pointer; font-family:serif;">*B*</button>
+                        <button type="button" title="Subrayado (_)" onclick="insertarFormato('__', '__')" style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; padding:0; background:white; color:#333; border:1px solid #ccc; border-radius:4px; text-decoration:underline; font-weight:bold; box-shadow:none; margin:0; cursor:pointer; font-family:serif;">_U_</button>
+                        <button type="button" title="Itálica (+)" onclick="insertarFormato('++', '++')" style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; padding:0; background:white; color:#333; border:1px solid #ccc; border-radius:4px; font-style:italic; font-weight:bold; box-shadow:none; margin:0; cursor:pointer; font-family:serif;">+I+</button>
+                    </div>
+                    <div style="height:24px; width:1px; background:#ccc; margin:0 2px;"></div>
+                    <button type="button" onclick="insertarTablaGenerada()" style="width:auto; height:32px; display:flex; align-items:center; justify-content:center; padding:0 10px; background:#28a745; color:white; border:none; border-radius:4px; font-size:0.75rem; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.2); margin:0; cursor:pointer;"><i class="fas fa-table" style="margin-right:6px;"></i> + TABLA</button>
+                    <div style="height:24px; width:1px; background:#ccc; margin:0 2px;"></div>
+                    <div style="display:flex; flex-grow:1; gap:4px; min-width:200px;">
+                        <input type="text" id="url-imagen-input" placeholder="Pega URL de la imagen aquí..." style="flex-grow:1; height:32px; padding:0 8px; border:1px solid #ccc; border-radius:4px; font-size:0.8rem; margin:0;">
+                        <button type="button" onclick="insertarImagenUrl()" style="width:auto; height:32px; display:flex; align-items:center; justify-content:center; padding:0 10px; background:#17a2b8; color:white; border:none; border-radius:4px; font-size:0.75rem; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.2); margin:0; cursor:pointer;"><i class="fas fa-image" style="margin-right:6px;"></i> PEGAR</button>
+                    </div>
+                </div>
+                <textarea id="texto-editor-detalles" style="flex-grow: 1; width: 100%; min-height: 250px; font-family: monospace; font-size: 1rem; padding: 10px; border: 1px solid #ccc; border-radius: 0 0 5px 5px; resize: none;"></textarea>
+            </div>
+            <button onclick="guardarEditorDetalles()" style="background:#4caf50; margin-top:10px;">APLICAR DETALLES</button>
+            <button class="btn-secondary" onclick="document.getElementById('modalEditorDetalles').style.display='none'">CANCELAR</button>
+        </div>
+    </div>
+
+    <div id="modalGestionAgenda" class="modal-overlay modal-fullscreen" style="z-index: 1100;">
         <div class="modal-content">
             <h3 id="titulo-modal-agenda" style="margin-top:0;">Gestión de Actividad</h3>
             <div class="contenido-scroll">
@@ -549,8 +587,9 @@
                     <small style="color:#cc0000; font-size:0.75rem; display:block; margin-top:5px;"><b>Nota:</b> "Familia Pastoral" SIEMPRE será Privado y oculto para el resto automáticamente.</small>
                 </div>
                 <div class="form-group">
-                    <label>Detalles:</label>
-                    <textarea id="agenda-evt-detalles" rows="3"></textarea>
+                    <label>Detalles Avanzados:</label>
+                    <input type="hidden" id="agenda-evt-detalles">
+                    <button type="button" onclick="abrirEditorDetalles()" style="background:#8e44ad; margin-top:0; box-shadow:0 2px 4px rgba(0,0,0,0.3);"><i class="fas fa-pen-nib"></i> ABRIR EDITOR DE DETALLES</button>
                 </div>
             </div>
             <div style="display:flex; gap:10px; margin-top:10px;">
@@ -1781,7 +1820,7 @@
                             ${adminTools}
                         </div>
                         <div class="agenda-title">${evt.title}</div>
-                        ${evt.details ? `<div style="font-size:0.85rem; color:#666; margin-top:5px;"><i class="fas fa-align-left text-muted"></i> ${evt.details}</div>` : ''}
+                        ${evt.details ? `<div style="font-size:0.85rem; color:#666; margin-top:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"><i class="fas fa-align-left text-muted"></i> ${parsearResumenDetalles(evt.details)}</div>` : ''}
                     </div>`;
             }).join('');
         } else {
@@ -1874,6 +1913,8 @@
             const capasModales = [
                 { id: 'modalIconos' },
                 { id: 'modalEvaluacion', fn: cerrarEvaluacion },
+                { id: 'modalVisorImagen' },
+                { id: 'modalEditorDetalles' },
                 { id: 'modalDetalleEvento' },
                 { id: 'modalListaAgendaPastor' },
                 { id: 'modalGestionAgenda' },
@@ -2551,11 +2592,139 @@
             }
         }
 
-        function urlify(text) {
-            const urlRegex = /(https?:\/\/[^\s]+)/g;
-            return text.replace(urlRegex, function(url) {
-                return `<a href="${url}" target="_blank" style="color:#2196F3; text-decoration:underline;">${url}</a>`;
+        function abrirEditorDetalles() {
+            document.getElementById('texto-editor-detalles').value = document.getElementById('agenda-evt-detalles').value;
+            document.getElementById('modalEditorDetalles').style.display = 'block';
+        }
+
+        function guardarEditorDetalles() {
+            document.getElementById('agenda-evt-detalles').value = document.getElementById('texto-editor-detalles').value;
+            document.getElementById('modalEditorDetalles').style.display = 'none';
+        }
+
+        function abrirImagenCompleta(url) {
+            document.getElementById('visor-img-src').src = url;
+            document.getElementById('modalVisorImagen').style.display = 'block';
+        }
+
+        function parsearResumenDetalles(text) {
+            if (!text) return '';
+            
+            // Si el texto contiene código HTML de una tabla, mostramos solo el icono
+            if (text.includes("<table") || text.includes("<td")) {
+                return "<b style='color:#e67e22; font-size: 1.1rem;' title='Contiene Tabla de Datos'><i class='fas fa-table'></i></b>";
+            }
+
+            // Convierte todos los saltos de línea físicos en un guion para que fluya en una sola línea continua
+            let resumen = text.replace(/(\r\n|\n|\r)/gm, " • ");
+            
+            // Aplica los formatos visuales
+            resumen = resumen.replace(/\*\*(.*?)\*\*/g, '<b style="color: var(--primary, #2196F3);">$1</b>');
+            resumen = resumen.replace(/__(.*?)__/g, '<u>$1</u>');
+            resumen = resumen.replace(/\+\+(.*?)\+\+/g, '<i>$1</i>');
+            
+            // Oculta links largos y pone un icono de imagen o link según corresponda
+            resumen = resumen.replace(/(https?:\/\/[^\s<]+)/gi, function(url) {
+                let isImg = url.match(/\.(jpeg|jpg|gif|png|webp)/i) || url.includes("drive.google.com");
+                if (isImg) {
+                    return "<b style='color:#28a745; font-size: 1.1rem;' title='Imagen Adjunta'><i class='fas fa-image'></i></b>";
+                } else {
+                    return "<b style='color:#17a2b8; font-size: 1.1rem;' title='Enlace Adjunto'><i class='fas fa-link'></i></b>";
+                }
             });
+            
+            return resumen;
+        }
+
+        function parsearDetalles(text) {
+            if (!text) return 'Sin detalles adicionales.';
+            let html = text;
+
+            // 1. Formato de texto (Soporta **negrita**, __subrayado__, ++cursiva++)
+            html = html.replace(/\*\*(.*?)\*\*/g, '<b style="color: var(--primary, #2196F3);">$1</b>');
+            html = html.replace(/__(.*?)__/g, '<u>$1</u>');
+            html = html.replace(/\+\+(.*?)\+\+/g, '<i>$1</i>');
+
+            // 2. Extraer URLs (compatible con Android APK)
+            let urls = [];
+            let urlRegex = /(https?:\/\/[^\s<]+)/gi;
+            html = html.replace(urlRegex, function(match, p1, offset, string) {
+                let prefijo = string.substring(Math.max(0, offset - 6), offset);
+                if (prefijo.includes('src="') || prefijo.includes("src='") || prefijo.includes('href="') || prefijo.includes("href='")) {
+                    return match; // Dejar intacto si ya es HTML
+                }
+                urls.push(match);
+                return `__URL_${urls.length - 1}__`;
+            });
+
+            // 3. Restaurar URLs como Imágenes Clickables o Enlaces de Texto
+            html = html.replace(/__URL_(\d+)__/g, function(match, i) {
+                let url = urls[i];
+                
+                // Truco maestro: Auto-convertir links de Google Drive a links directos de imagen
+                let gDriveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+                if (gDriveMatch) {
+                    url = `https://drive.google.com/uc?id=${gDriveMatch[1]}`;
+                }
+                
+                // Detecta si es imagen por extensión o por ser link directo de Drive
+                let isImg = url.match(/\.(jpeg|jpg|gif|png|webp)/i) || url.includes("uc?id="); 
+                if (isImg) {
+                    // Si el link se rompe (ej. no era foto, era PDF), el 'onerror' lo rescata convirtiéndolo en texto clickeable
+                    return `<div style="text-align:center; margin:15px 0;"><img src="${url}" style="max-width:100%; max-height:400px; object-fit:contain; border-radius:8px; cursor:zoom-in; box-shadow:0 2px 5px rgba(0,0,0,0.3);" onclick="abrirImagenCompleta('${url}')" onerror="this.outerHTML='<a href=&quot;${url}&quot; target=&quot;_blank&quot; style=&quot;color:#2196F3; font-weight:bold;&quot;>[Abrir Archivo / PDF Adjunto]</a>'"></div>`;
+                } else {
+                    return `<a href="${url}" target="_blank" style="color:#2196F3; text-decoration:underline; font-weight:bold; word-break:break-all;">${url}</a>`;
+                }
+            });
+
+            // 4. Limpieza de saltos de línea sin deformar tablas
+            html = html.replace(/\n/g, '<br>');
+            html = html.replace(/(<\/?(?:table|tbody|thead|tfoot|tr|td|th)[^>]*>)<br>/gi, '$1');
+            html = html.replace(/<br>(<\/?(?:table|tbody|thead|tfoot|tr|td|th)[^>]*>)/gi, '$1');
+
+            return html;
+        }
+
+        // --- FUNCIONES DE LA BARRA DE HERRAMIENTAS DEL EDITOR ---
+        function insertarFormato(prefijo, sufijo) {
+            const txt = document.getElementById('texto-editor-detalles');
+            const inicio = txt.selectionStart;
+            const fin = txt.selectionEnd;
+            const textoSeleccionado = txt.value.substring(inicio, fin);
+            const nuevoTexto = txt.value.substring(0, inicio) + prefijo + textoSeleccionado + sufijo + txt.value.substring(fin);
+            txt.value = nuevoTexto;
+            txt.focus();
+            txt.selectionStart = inicio + prefijo.length;
+            txt.selectionEnd = fin + prefijo.length;
+        }
+
+        function insertarTablaGenerada() {
+            const r = prompt("Número de filas:", "4");
+            const c = prompt("Número de columnas:", "3");
+            if(r && c) {
+                const rows = parseInt(r); const cols = parseInt(c);
+                let t = `\n<table class='custom-table-format'>\n<thead>\n<tr>`;
+                for(let i=0; i<cols; i++) t += `\n  <th>Encabezado ${i+1}</th>`;
+                t += `\n</tr>\n</thead>\n<tbody>`;
+                for(let i=0; i<rows; i++) {
+                    t += `\n<tr>`;
+                    for(let j=0; j<cols; j++) t += `\n  <td>Dato ${i+1}-${j+1}</td>`;
+                    t += `\n</tr>`;
+                }
+                t += `\n</tbody>\n</table>\n`;
+                insertarFormato(t, "");
+            }
+        }
+
+        function insertarImagenUrl() {
+            const urlInput = document.getElementById('url-imagen-input');
+            const url = urlInput.value.trim();
+            if (url) {
+                insertarFormato("\n" + url + "\n", "");
+                urlInput.value = ""; // Limpiar casilla después de agregar
+            } else {
+                alert("Por favor, pega una URL en la casilla primero.");
+            }
         }
 
         function abrirDetalleEvento(id) {
@@ -2574,8 +2743,7 @@
             }
             document.getElementById('detalle-evt-fecha').innerHTML = `<i class="far fa-calendar-alt"></i> ${fechas}`;
             
-            let desc = evt.details ? urlify(evt.details.replace(/\n/g, '<br>')) : 'Sin detalles adicionales.';
-            document.getElementById('detalle-evt-desc').innerHTML = desc;
+            document.getElementById('detalle-evt-desc').innerHTML = parsearDetalles(evt.details);
             
             document.getElementById('modalDetalleEvento').style.display = 'block';
         }
