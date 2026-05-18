@@ -147,6 +147,7 @@
     <div class="info-bar" id="info-bar">Sábado: Calculando... | Usuario: Invitado</div>
 
     <div id="mainScreen" class="screen active">
+        <div style="text-align: center; color: #555; font-size: 0.95rem; font-weight: bold; margin-bottom: 15px; text-transform: uppercase;">Predicaciones para el</div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <div style="display: flex; align-items: center; gap: 5px;">
                 <button style="width: auto; padding: 2px 6px; font-size: 0.75rem; background: transparent; color: var(--primary); border: 1px solid var(--primary); border-radius: 4px; margin: 0; box-shadow: none;" onclick="cambiarSemana(-1)" title="Sábado Anterior"><i class="fas fa-chevron-left"></i></button>
@@ -196,10 +197,16 @@
         </div>
         
         <div id="seccion-iglesias">
-
-
-
+            <h3>Configuración General</h3>
+            <div class="form-group" style="display:flex; gap:10px; margin-bottom:20px;">
+                <input type="text" id="input-nombre-distrito" placeholder="Nombre del Distrito (Ej. FRESNILLO SUR)">
+                <button style="width:auto; margin-top:0;" onclick="guardarNombreDistrito()" title="Guardar Nombre del Distrito"><i class="fas fa-save"></i></button>
+            </div>
+            <hr style="border-top:2px dashed #ccc; margin: 20px 0;">
             <h3>Administrar Iglesias</h3>
+
+
+
             <button onclick="abrirFormularioNuevaIglesia()"><i class="fas fa-plus"></i> Nueva Iglesia</button>
             <ul id="lista-config-iglesias" style="margin-bottom: 30px; padding-left: 0;"></ul>
         </div>
@@ -1698,8 +1705,14 @@
 
 
         function renderCards() {
+            const nombreDistrito = datosLocales.nombre_distrito || 'FRESNILLO SUR';
+            document.getElementById('app-title').innerHTML = `<i class="fas fa-bible"></i> ${nombreDistrito}`;
+            
             const contenedor = document.getElementById('lista-tarjetas');
             contenedor.innerHTML = "";
+
+
+
             
             const tituloSabado = document.getElementById('titulo-sabado-principal');
             const btnRegresar = document.getElementById('btn-regresar-sabado');
@@ -1714,7 +1727,7 @@
                     const mes = meses[parseInt(partesFecha[1], 10) - 1];
                     const año = partesFecha[0];
                     
-                    tituloSabado.innerHTML = `<i class="fas fa-calendar-alt"></i> Sábado ${dia} de ${mes} de ${año}`;
+                    tituloSabado.innerHTML = `<i class="fas fa-calendar-alt"></i> Sáb: ${dia} de ${mes} de ${año}`;
                     btnRegresar.style.display = 'inline-block';
                 }
             }
@@ -2883,8 +2896,21 @@
             document.getElementById('modalIconos').style.display = 'none';
         }
 
+        function guardarNombreDistrito() {
+            const nuevoNombre = document.getElementById('input-nombre-distrito').value.trim();
+            if (nuevoNombre) {
+                datosLocales.nombre_distrito = nuevoNombre;
+                saveGist();
+                document.getElementById('app-title').innerHTML = `<i class="fas fa-bible"></i> ${nuevoNombre}`;
+                alert("¡Nombre del distrito actualizado correctamente!");
+            }
+        }
+
         function abrirFormularioNuevaIglesia() {
             editIndexIglesia = -1;
+
+
+
             document.getElementById('nueva-iglesia').value = '';
             document.getElementById('color-iglesia').value = '#2196F3';
             document.getElementById('icono-iglesia').value = 'fa-church';
@@ -3282,7 +3308,13 @@
         }
 
         function renderConfigLists() {
+            const inputDistrito = document.getElementById('input-nombre-distrito');
+            if (inputDistrito) inputDistrito.value = datosLocales.nombre_distrito || 'FRESNILLO SUR';
+
             document.getElementById('lista-config-iglesias').innerHTML = datosLocales.iglesias.map((i, index) => {
+
+
+
                 let col = i.color || '#999';
                 let ico = i.icono || 'fa-church';
                 return `<li style="margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; background:var(--surface); padding:10px; border-radius:8px; box-shadow:0 1px 2px rgba(0,0,0,0.1);">
