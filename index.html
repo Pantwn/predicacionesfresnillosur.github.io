@@ -387,16 +387,8 @@
                         <div><b>•</b> Ver eventos ocultos para usuarios normales.</div>
                     </div>
                     <h4 style="margin:0 0 8px 0; color:#333;"><i class="fas fa-keyboard"></i> Atajos de Teclado (Admins)</h4>
-                    <div style="font-size:0.85rem; color:#555; display:flex; flex-direction:column; gap:5px; text-align:left;">
-                        <div><b>Tecla [-]:</b> Registrar Nuevo Predicador</div>
-                        <div><b>Tecla [+]:</b> Asignar Predicación</div>
-                        <div><b>Alt + S:</b> Ventana de Sustituciones</div>
-                        <div><b>Alt + C:</b> Calendario Mensual</div>
-                        <div><b>Alt + L:</b> Ver Leyenda de Colores</div>
-                        <div><b>Flechas [← / →]:</b> Navegar entre Sábados</div>
-                        <div><b>Flecha [↓]:</b> Regresar al Sábado Actual</div>
-                        <div><b>Tecla [ESC]:</b> Cerrar ventanas o Volver a Inicio</div>
-                    </div>
+                    <div id="lista-atajos-leyenda" style="font-size:0.85rem; color:#555; display:flex; flex-direction:column; gap:5px; text-align:left;">
+                        </div>
                 </div>
             </div>
             <button class="btn-secondary" onclick="document.getElementById('modalLeyenda').style.display='none'">CERRAR</button>
@@ -755,9 +747,11 @@
             
             if (destacados.length > 0) {
                 const overlay = document.createElement('div');
+                overlay.id = 'overlay-recordatorios';
                 overlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9998; backdrop-filter:blur(3px);';
                 
                 const box = document.createElement('div');
+                box.id = 'box-recordatorios';
                 box.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:linear-gradient(145deg, #fff9c4, #f1c40f); color:#333; padding:20px; border-radius:15px; box-shadow:0 10px 25px rgba(0,0,0,0.5), 0 0 20px rgba(241,196,15,0.6); z-index:9999; width:90%; max-width:400px; text-align:center; animation: parpadeoElegante 2s infinite; cursor:pointer; border:2px solid #d4af37;';
                 
                 let listaHTML = destacados.map(d => {
@@ -1539,9 +1533,34 @@
                     const elLeyenda = document.getElementById('lista-permisos-leyenda');
                     if(elLeyenda) elLeyenda.innerHTML = listaPermisosLeyenda;
 
+                    const elAtajos = document.getElementById('lista-atajos-leyenda');
+                    if (elAtajos) {
+                        let atajosHTML = `
+                            <div><b>Alt + Enter:</b> Ingresar Contraseña</div>
+                            <div><b>Tecla [-]:</b> Registrar Nuevo Predicador</div>
+                            <div><b>Tecla [+]:</b> Asignar Predicación</div>
+                            <div><b>Alt + S:</b> Ventana de Sustituciones</div>
+                            <div><b>Alt + C:</b> Calendario Mensual</div>
+                            <div><b>Alt + K:</b> Agenda Distrital (Kalender)</div>`;
+                        
+                        if (usuarioActual.rol === 'super_admin') {
+                            atajosHTML += `<div><b>Alt + K + K:</b> Gestión de Visibilidad</div>`;
+                        }
+                        
+                        atajosHTML += `
+                            <div><b>Alt + L:</b> Ver Leyenda de Colores</div>
+                            <div><b>Flechas [← / →]:</b> Navegar entre Sábados</div>
+                            <div><b>Flecha [↓]:</b> Regresar al Sábado Actual</div>
+                            <div><b>Tecla [ESC]:</b> Cerrar ventanas o Volver a Inicio</div>`;
+                        
+                        elAtajos.innerHTML = atajosHTML;
+                    }
+
                     const overlayWrap = document.createElement('div');
+                    overlayWrap.id = 'overlay-permisos';
                     overlayWrap.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; z-index:9998;';
                     const msg = document.createElement('div');
+                    msg.id = 'msg-permisos';
                     msg.style.cssText = 'position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#28a745; color:white; padding:15px 20px; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.3); z-index:9999; width:90%; max-width:400px; text-align:center; font-size:0.9rem; cursor:pointer;';
                     msg.innerHTML = `<b><i class="fas fa-user-shield"></i> ¡Bienvenido ${usuarioActual.nombreReal || usuarioActual.nombre}!</b><br><br>
                         <div style="text-align:left; font-size:0.85rem; line-height:1.4;">
@@ -1974,10 +1993,14 @@
     }, {passive: true});
 
     // --- SISTEMA DE ATAJOS DE TECLADO ---
+    let lastAltKTime = 0;
+    let altKTimeout;
     document.addEventListener('keydown', e => {
         // 1. Control del botón ESCAPE para cerrar ventanas por capas o regresar a inicio
         if (e.key === 'Escape' || e.key === 'Esc') {
             const capasModales = [
+                { id: 'overlay-recordatorios', fn: () => { document.getElementById('overlay-recordatorios').remove(); if(document.getElementById('box-recordatorios')) document.getElementById('box-recordatorios').remove(); } },
+                { id: 'overlay-permisos', fn: () => { document.getElementById('overlay-permisos').remove(); if(document.getElementById('msg-permisos')) document.getElementById('msg-permisos').remove(); } },
                 { id: 'modalConfigPastor' },
                 { id: 'modalIconos' },
                 { id: 'modalEvaluacion', fn: cerrarEvaluacion },
@@ -2021,6 +2044,32 @@
 
         // Evitar que los atajos se disparen si el usuario está escribiendo dentro de un cuadro de texto
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+
+        // Atajo para TODOS: Alt + Enter para abrir Login e ir a la contraseña
+        if (e.altKey && e.key === 'Enter') {
+            e.preventDefault();
+            showScreen('loginScreen');
+            return;
+        }
+
+        // Atajo: Alt + K (Agenda Completa) y Alt + K + K (Visibilidad) - Solo Admins y Pastor
+        if (e.altKey && (e.key === 'k' || e.key === 'K')) {
+            e.preventDefault();
+            if (usuarioActual && (usuarioActual.rol === 'admin' || usuarioActual.rol === 'super_admin')) {
+                const currentTime = new Date().getTime();
+                if (currentTime - lastAltKTime < 500) {
+                    clearTimeout(altKTimeout); // Cancela la apertura del Kalender
+                    abrirListaAgendaPastor();  // Abre Gestión de Visibilidad
+                    lastAltKTime = 0;
+                } else {
+                    lastAltKTime = currentTime;
+                    altKTimeout = setTimeout(() => {
+                        abrirAgendaCompleta(); // Abre Kalender después de medio segundo si no hay segundo toque
+                    }, 500);
+                }
+            }
+            return;
+        }
 
         // Atajo: Tecla - (Teclado numérico o estándar) para Nuevo Predicador (Solo Administradores)
         if ((e.key === '-' || e.code === 'NumpadSubtract') && usuarioActual) {
@@ -2284,7 +2333,7 @@ function verificarFechaLaicosForm(fecha) {
                         let daysLeftInWeek = 7 - currentDayObj.getDay();
                         let span = Math.min(daysLeftInEvent, daysLeftInWeek);
 
-                        let extraStyles = `background-color: ${dept.color} !important; position: relative; z-index: 10; margin-top: 2px;`;
+                        let extraStyles = `background-color: ${dept.color} !important; position: relative; z-index: 10; margin-top: 2px; height: 22px !important; min-height: 22px !important; max-height: 22px !important; box-sizing: border-box; overflow: hidden;`;
                         
                         if (span > 1) {
                             extraStyles += ` width: calc(${span * 100}% + ${(span - 1) * 10}px); justify-content: flex-start; padding-left: 6px;`;
@@ -2303,9 +2352,9 @@ function verificarFechaLaicosForm(fecha) {
                         let innerCont = '';
                         
                         if (isOneDayEvent || isOrphanSunday) {
-                            innerCont = `<i class="${dept.icon}"></i>`;
+                            innerCont = `<i class="${dept.icon}" style="line-height: 1;"></i>`;
                         } else {
-                            innerCont = `<i class="${dept.icon}" style="margin-right: 5px;"></i> <span style="font-size: 0.8rem; font-weight: bold; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${evt.title}</span>`;
+                            innerCont = `<i class="${dept.icon}" style="margin-right: 5px; line-height: 1;"></i> <span style="font-size: 0.8rem; font-weight: bold; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1; padding-bottom: 2px;">${evt.title}</span>`;
                         }
                         
                         let dblClickAttr = `ondblclick="abrirDetalleEvento('${evt.id}')"`;
