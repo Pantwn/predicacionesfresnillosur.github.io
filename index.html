@@ -1791,7 +1791,7 @@
 
         function renderCards() {
             const nombreDistrito = datosLocales.nombre_distrito || 'FRESNILLO SUR';
-            document.getElementById('app-title').innerHTML = `<i class="fas fa-bible" ondblclick="abrirCreacionPastor()" style="cursor:pointer;" title="Doble clic para configurar Pastor"></i> ${nombreDistrito}`;
+            document.getElementById('app-title').innerHTML = `<i class="fas fa-bible" ondblclick="abrirCreacionPastor()" style="cursor:pointer;" title="Doble clic para configurar Pastor"></i> <span ondblclick="abrirMisPredicaciones()" style="cursor:pointer;" title="Doble clic para ver Mis Predicaciones">${nombreDistrito}</span>`;
             
             const contenedor = document.getElementById('lista-tarjetas');
             contenedor.innerHTML = "";
@@ -3210,7 +3210,7 @@ function verificarFechaLaicosForm(fecha) {
             if (nuevoNombre) {
                 datosLocales.nombre_distrito = nuevoNombre;
                 saveGist();
-                document.getElementById('app-title').innerHTML = `<i class="fas fa-bible" ondblclick="abrirCreacionPastor()" style="cursor:pointer;" title="Doble clic para configurar Pastor"></i> ${nuevoNombre}`;
+                document.getElementById('app-title').innerHTML = `<i class="fas fa-bible" ondblclick="abrirCreacionPastor()" style="cursor:pointer;" title="Doble clic para configurar Pastor"></i> <span ondblclick="abrirMisPredicaciones()" style="cursor:pointer;" title="Doble clic para ver Mis Predicaciones">${nuevoNombre}</span>`;
                 alert("¡Nombre del distrito actualizado correctamente!");
             }
         }
@@ -3382,7 +3382,7 @@ function verificarFechaLaicosForm(fecha) {
 
         // --- LÓGICA CREACIÓN PASTOR DE DISTRITO OCULTO ---
         function abrirCreacionPastor() {
-            let pass = prompt("🔒 Acceso Restringido.\nIngresa la clave secreta para configurar al nuevo Pastor:");
+            let pass = prompt("🔒 Acceso Restringido.\nIngresa el codigo:");
             if (pass === "1402") {
                 let nombreActual = datosLocales.pastor_distrito ? datosLocales.pastor_distrito.nombre : '';
                 let claveActual = datosLocales.pastor_distrito ? datosLocales.pastor_distrito.clave : '';
