@@ -124,6 +124,7 @@
         .agenda-card { background: linear-gradient(145deg, #ffffff, #f4f6f9); padding: 12px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 5px solid #ccc; }
         .agenda-title { font-weight: bold; color: #2c3e50; font-size: 1.05rem; line-height: 1.2; margin-top: 3px; }
         .agenda-dept { font-size: 0.7rem; color: white; padding: 3px 8px; border-radius: 12px; display: inline-block; font-weight: bold; text-transform: uppercase; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+        .btn-float-destacados { position: fixed; bottom: 30px; right: 30px; color: #f1c40f; font-size: 1.5rem; cursor: pointer; z-index: 9990; transition: all 0.3s ease; background: transparent; border: none; padding: 10px; border-radius: 50%; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; box-shadow: none; }
     </style>
 
 
@@ -633,7 +634,7 @@
                     <input type="month" id="filtro-mes-lista-agenda" onchange="renderListaAgendaPastor()" style="padding: 4px 8px; font-size: 0.85rem; width: 100%; height: 32px; box-sizing: border-box;">
                     <button style="margin: 0; padding: 4px 10px; width: auto; font-size: 0.85rem; height: 32px; display: flex; align-items: center; gap: 5px;" onclick="document.getElementById('filtro-mes-lista-agenda').value=''; renderListaAgendaPastor()"><i class="fas fa-times"></i></button>
                 </div>
-                <div style="display:flex; gap:8px; align-items:center; background:#e0e0e0; padding:4px 8px; border-radius:5px;">
+                <div id="botones-ajuste-masivo" style="display:flex; gap:8px; align-items:center; background:#e0e0e0; padding:4px 8px; border-radius:5px;">
                     <i class="fas fa-users text-primary" style="font-size:1.2rem; cursor:pointer;" onclick="bulkToggleVisibilidad('users')" title="Ajuste Masivo Usuarios"></i>
                     <i class="fas fa-user-shield text-primary" style="font-size:1.2rem; cursor:pointer;" onclick="bulkToggleVisibilidad('admins')" title="Ajuste Masivo Admins"></i>
                 </div>
@@ -646,6 +647,36 @@
         </div>
     </div>
 
+    <div id="modalMisPredicaciones" class="modal-overlay modal-fullscreen" style="z-index: 1300;">
+        <div class="modal-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+                <h3 style="margin:0; flex-grow:1; color:var(--primary);"><i class="fas fa-book-bible"></i> Mis Predicaciones Agendadas</h3>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:8px; margin-bottom: 15px;">
+                <div style="position:relative;">
+                    <input type="text" id="input-buscador-mis-predicaciones" placeholder="🔍 Buscar palabras, fechas, iglesia, nombres..." onkeyup="renderMisPredicaciones()" style="padding:8px 12px; font-size:1rem; width:100%; border:1px solid var(--primary); border-radius:8px; box-sizing:border-box;">
+                </div>
+                <label style="font-size:0.9rem; display:flex; align-items:center; gap:8px; font-weight:bold; color:#555; background:#f4f6f9; padding:8px; border-radius:8px;">
+                    <input type="checkbox" id="chk-mis-predicaciones-dias" onchange="renderMisPredicaciones()" style="width:auto; transform:scale(1.3); margin:0;">
+                    Incluir Miércoles y Viernes
+                </label>
+                <label style="font-size:0.9rem; display:flex; align-items:center; gap:8px; font-weight:bold; color:#555; background:#f4f6f9; padding:8px; border-radius:8px;">
+                    <input type="checkbox" id="chk-mis-predicaciones-invitados" onchange="renderMisPredicaciones()" style="width:auto; transform:scale(1.3); margin:0;">
+                    Incluir Foráneos, Pastores y Departamentales
+                </label>
+            </div>
+
+
+
+            <div class="contenido-scroll" id="lista-mis-predicaciones" style="background: #f9f9f9; padding: 10px; border-radius: 8px;">
+            </div>
+            <button class="btn-secondary" onclick="document.getElementById('modalMisPredicaciones').style.display='none'">CERRAR</button>
+        </div>
+    </div>
+
+    <button id="btn-destacados-flotante" class="btn-float-destacados" onclick="mostrarRecordatoriosDestacados()" title="Ver eventos destacados" style="display: flex; background: transparent; box-shadow: none;">
+        <i class="fas fa-star"></i>
+    </button>
     <script>
 
 
@@ -746,9 +777,11 @@
             let destacados = eventosAgenda.filter(e => e.destacado && (e.endDate ? e.endDate >= hoy : e.date >= hoy) && puedeVerEventoAgenda(e));
             
             if (destacados.length > 0) {
+                const btn = document.getElementById('btn-destacados-flotante');
+                if (btn) btn.classList.add('activo');
                 const overlay = document.createElement('div');
                 overlay.id = 'overlay-recordatorios';
-                overlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9998; backdrop-filter:blur(3px);';
+                overlay.style.cssText = 'display:block; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9998; backdrop-filter:blur(3px);';
                 
                 const box = document.createElement('div');
                 box.id = 'box-recordatorios';
@@ -759,19 +792,20 @@
                     return `<div onclick="abrirDetalleEvento('${d.id}')" style="margin-bottom:10px; background:rgba(255,255,255,0.85); padding:10px; border-radius:8px; border-left: 5px solid ${dept.color}; text-align: left; cursor:pointer; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
                         <div style="font-size:0.7rem; background-color:${dept.color}; color:white; padding:3px 8px; border-radius:12px; font-weight:bold; display:inline-block; margin-bottom:5px;"><i class="${dept.icon}"></i> ${dept.name}</div>
                         <div style="font-weight:bold; font-size:0.95rem; color:#333;">${d.title}</div>
-                        <div style="font-size:0.85rem; color:#555; margin-top:3px;"><i class="far fa-calendar-alt"></i> ${formatearFechaVisual(d.date)}</div>
+                        <div style="font-size:0.85rem; color:#555; margin-top:3px; display:flex; justify-content:space-between; align-items:center;"><span style="display:flex; align-items:center;"><i class="far fa-calendar-alt" style="margin-right:5px;"></i> ${formatearFechaVisual(d.date)}</span> <i class="fas fa-arrow-right" style="cursor:pointer; color:var(--primary); font-size:1rem; margin-left:10px;" onclick="event.stopPropagation(); irAFecha('${d.date}')" title="Ir a esta fecha"></i></div>
                     </div>`;
                 }).join('');
                 
                 box.innerHTML = `<h3 style="margin-top:0; color:#d35400; font-weight:900;"><i class="fas fa-star" style="color:#f39c12; text-shadow:0 0 5px #fff;"></i> EVENTOS IMPORTANTES</h3>
                                  <p style="font-size:0.9rem; font-weight:bold; margin-bottom:15px;">¡Prepárate! No olvides estas actividades:</p>
-                                 <div style="max-height:40vh; overflow-y:auto; text-align:left;">${listaHTML}</div>
+                                 <div style="max-height:40vh; overflow-y:auto; text-align:left; padding-right: 5px;">${listaHTML}</div>
                                  <small style="display:block; margin-top:15px; font-weight:bold; color:#7f8c8d;">(Toca aquí o fuera para cerrar)</small>`;
                 
                 document.body.appendChild(overlay);
                 document.body.appendChild(box);
                 
                 const cerrar = () => {
+                    if (btn) btn.classList.remove('activo');
                     if(overlay.parentNode) overlay.remove();
                     if(box.parentNode) box.remove();
                 };
@@ -1524,7 +1558,7 @@
                         listaPermisosLeyenda = `<div><b>•</b> <b>Control Total (Modo Creador).</b></div><div><b>•</b> Crear, editar y eliminar el perfil del Pastor de Distrito.</div><div><b>•</b> Gestión integral de iglesias, usuarios administradores y padrón de predicadores.</div><div><b>•</b> Control absoluto sobre la Agenda Distrital (Kalender).</div><div><b>•</b> Evaluar asistencia, registrar sermones y administrar el sistema completo.</div>`;
                     } else if (usuarioActual.rol === 'super_admin') {
                         listaPermisos = `• <b>Gestión Integral:</b> Asignar, editar y administrar a todos los predicadores en todas las iglesias.<br>• <b>Evaluación de Asistencia:</b> Registrar cumplimientos y detallar "Mi Participación" (sermón e himnos).<br>• <b>Control de Kalender:</b> Crear, modificar y eliminar actividades oficiales de la agenda distrital.<br>• <b>Visibilidad Avanzada:</b> Gestionar privacidad de eventos (Públicos, Administradores, Privados).<br>• <b>Alertas y Eventos:</b> Destacar actividades y agendar la reunión del "Club de Laicos".<br>• <b>Ajustes Masivos:</b> Acceso a la Lista de Actividades para cambios rápidos de visualización.<br>• <b>Privacidad Pastoral:</b> Uso exclusivo y confidencial del departamento "Familia Pastoral".<br>• <span style="color:#ffeb3b; font-weight:bold;">Nota de Seguridad: No puedes crear ni eliminar tu propio perfil (Acción exclusiva del Creador).</span>`;
-                        listaPermisosLeyenda = `<div><b>•</b> <b>Gestión Integral:</b> Asignar, editar y administrar a todos los predicadores en todas las iglesias.</div><div><b>•</b> <b>Evaluación de Asistencia:</b> Registrar cumplimientos y detallar "Mi Participación" (sermón e himnos).</div><div><b>•</b> <b>Control de Kalender:</b> Crear, modificar y eliminar actividades oficiales de la agenda distrital.</div><div><b>•</b> <b>Visibilidad Avanzada:</b> Gestionar privacidad de eventos (Públicos, Administradores, Privados).</div><div><b>•</b> <b>Alertas y Eventos:</b> Destacar actividades y agendar la reunión del "Club de Laicos".</div><div><b>•</b> <b>Ajustes Masivos:</b> Acceso a la Lista de Actividades para cambios rápidos de visualización.</div><div><b>•</b> <b>Privacidad Pastoral:</b> Uso exclusivo y confidencial del departamento "Familia Pastoral".</div><div><b>•</b> <span style="color:#cc0000; font-weight:bold;">Nota de Seguridad: No puedes crear ni eliminar tu propio perfil (Acción exclusiva del Creador).</span></div>`;
+                        listaPermisosLeyenda = `<div><b>•</b> <b>Gestión Integral:</b> Asignar, editar y administrar a todos los predicadores en todas las iglesias.</div><div><b>•</b> <b>Evaluación de Asistencia:</b> Registrar cumplimientos y detallar "Mi Participación" (sermón e himnos).</div><div><b>•</b> <b>Control de Kalender:</b> Crear, modificar y eliminar actividades oficiales de la agenda distrital.</div><div><b>•</b> <b>Visibilidad Avanzada:</b> Gestionar privacidad de eventos (Públicos, Administradores, Privados).</div><div><b>•</b> <b>Alertas y Eventos:</b> Destacar actividades y agendar la reunión del "Club de Laicos".</div><div><b>•</b> <b>Ajustes Masivos:</b> Acceso a la Lista de Actividades para cambios rápidos de visualización.</div><div><b>•</b> <b>Privacidad Pastoral:</b> Uso exclusivo y confidencial del departamento "Familia Pastoral".</div><div><b>•</b> <b>Gestión de Visibilidad:</b> Acceso a buscar eventos y ajustar sus permisos rápidamente.</div><div><b>•</b> <span style="color:#cc0000; font-weight:bold;">Nota de Seguridad: No puedes crear ni eliminar tu propio perfil (Acción exclusiva del Creador).</span></div>`;
                     } else {
                         listaPermisos = `• Asignar predicaciones en tus iglesias.<br>• Agregar nuevos predicadores locales.<br>• Editar/Eliminar TUS asignaciones.<br>• Consultar Calendario y Agenda Distrital.<br>• Ver eventos ocultos a usuarios normales.`;
                         listaPermisosLeyenda = `<div><b>•</b> Asignar predicaciones en tus iglesias.</div><div><b>•</b> Agregar nuevos predicadores locales.</div><div><b>•</b> Editar o Eliminar TUS asignaciones.</div><div><b>•</b> Consultar Calendario y Agenda Distrital.</div><div><b>•</b> Ver eventos ocultos para usuarios normales.</div>`;
@@ -1541,7 +1575,8 @@
                             <div><b>Tecla [+]:</b> Asignar Predicación</div>
                             <div><b>Alt + S:</b> Ventana de Sustituciones</div>
                             <div><b>Alt + C:</b> Calendario Mensual</div>
-                            <div><b>Alt + K:</b> Agenda Distrital (Kalender)</div>`;
+                            <div><b>Alt + K:</b> Agenda Distrital (Kalender)</div>
+                            <div><b>Alt + K + K:</b> Gestión de Visibilidad y Buscador</div>`;
                         
                         if (usuarioActual.rol === 'super_admin') {
                             atajosHTML += `<div><b>Alt + K + K:</b> Gestión de Visibilidad</div>`;
@@ -1558,7 +1593,7 @@
 
                     const overlayWrap = document.createElement('div');
                     overlayWrap.id = 'overlay-permisos';
-                    overlayWrap.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; z-index:9998;';
+                    overlayWrap.style.cssText = 'display:block; position:fixed; top:0; left:0; width:100%; height:100%; z-index:9998;';
                     const msg = document.createElement('div');
                     msg.id = 'msg-permisos';
                     msg.style.cssText = 'position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#28a745; color:white; padding:15px 20px; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.3); z-index:9999; width:90%; max-width:400px; text-align:center; font-size:0.9rem; cursor:pointer;';
@@ -1921,8 +1956,103 @@
 
 
 
+    function abrirMisPredicaciones() {
+        if (!usuarioActual || usuarioActual.nombre !== 'Pastor de Distrito') return;
+        document.getElementById('input-buscador-mis-predicaciones').value = '';
+        renderMisPredicaciones();
+        document.getElementById('modalMisPredicaciones').style.display = 'block';
+    }
+
+    function renderMisPredicaciones() {
+        const contenedor = document.getElementById('lista-mis-predicaciones');
+        contenedor.innerHTML = '';
+        const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+        
+        const textoBusqueda = quitarAcentosExtremo(document.getElementById('input-buscador-mis-predicaciones').value).trim();
+        const terminos = textoBusqueda.split(' ').filter(t => t !== '');
+        const mostrarMiercolesViernes = document.getElementById('chk-mis-predicaciones-dias').checked;
+        const mostrarInvitados = document.getElementById('chk-mis-predicaciones-invitados').checked;
+
+        let predicaciones = [...datosLocales.predicaciones];
+
+        if (!mostrarInvitados) {
+            predicaciones = predicaciones.filter(p => {
+                let pData = datosLocales.predicadores_lista.find(x => x.nombre === p.predicador);
+                if (!pData) return true;
+                return pData.tipo !== 'foraneo' && pData.tipo !== 'departamental' && pData.tipo !== 'pastor';
+            });
+        }
+
+        if (!mostrarMiercolesViernes) {
+            predicaciones = predicaciones.filter(p => {
+                let dateObj = new Date(p.fecha + "T12:00:00");
+                return dateObj.getDay() === 6; 
+            });
+        }
+
+        if (terminos.length > 0) {
+            const mesesMap = { 'ene':'01', 'feb':'02', 'mar':'03', 'abr':'04', 'may':'05', 'jun':'06', 'jul':'07', 'ago':'08', 'sep':'09', 'oct':'10', 'nov':'11', 'dic':'12' };
+            predicaciones = predicaciones.filter(p => {
+                let pData = datosLocales.predicadores_lista.find(x => x.nombre === p.predicador) || {tipo: ''};
+                let fechaObj = new Date(p.fecha + "T12:00:00");
+                let mesNombre = meses[fechaObj.getMonth()].toLowerCase();
+                let mesNum = String(fechaObj.getMonth() + 1).padStart(2, '0');
+                let textoFicha = quitarAcentosExtremo(`${p.fecha} ${p.iglesia} ${p.predicador} ${p.sermonTitulo||''} ${p.sermonCita||''} ${pData.tipo} ${mesNombre} ${mesNum}`);
+                return terminos.every(term => textoFicha.includes(quitarAcentosExtremo(term)));
+            });
+        }
+
+        predicaciones.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+        
+        if (predicaciones.length === 0) {
+            contenedor.innerHTML = '<p style="text-align:center; color:#666; margin-top:20px;">No se encontraron predicaciones registradas.</p>';
+            return;
+        }
+
+        let htmlFinal = "";
+        let mesActualStr = "";
+
+        predicaciones.forEach(p => {
+            let dateObj = new Date(p.fecha + "T12:00:00");
+            let mesAnio = `${meses[dateObj.getMonth()]} ${dateObj.getFullYear()}`;
+            
+            if (mesAnio !== mesActualStr) {
+                mesActualStr = mesAnio;
+                htmlFinal += `<h4 style="margin: 20px 0 10px 0; color: var(--primary); border-bottom: 2px solid var(--primary); padding-bottom: 5px;"><i class="fas fa-calendar-alt"></i> ${mesActualStr}</h4>`;
+            }
+
+            let churchData = datosLocales.iglesias.find(ig => ig.nombre === p.iglesia);
+            let churchColor = churchData && churchData.color ? churchData.color : '#2196F3';
+            let churchIcon = churchData && churchData.icono ? churchData.icono : 'fa-church';
+            let churchBg = churchColor + '33';
+            
+            let pData = datosLocales.predicadores_lista.find(x => x.nombre === p.predicador);
+            let tagPredicador = pData ? `<span class="tag-predicador color-${pData.tipo}" style="font-size:0.85rem; padding: 4px 10px; margin:0;">${p.predicador}</span>` : `<b style="font-size:0.95rem;">${p.predicador}</b>`;
+            let statusLlego = (p.llego === 'no') ? `<span style="color:#cc0000; font-size:0.8rem; margin-left:10px;"><i class="fas fa-times-circle"></i> Faltó (Sub: ${p.sustituto||'Nadie'})</span>` : '';
+
+            let diaSemana = dateObj.getDay();
+            let nombreDia = diaSemana === 3 ? "Miércoles" : (diaSemana === 5 ? "Viernes" : "Sábado");
+
+            htmlFinal += `
+                <div class="card" style="background-color: white; border-left: 5px solid ${churchColor}; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 10px; padding: 12px; cursor: pointer;" onclick="irAFecha('${p.fecha}')" title="Ir a esta fecha">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+                        <span style="font-size:0.85rem; color:#555; font-weight:bold;">${nombreDia} ${formatearFechaVisual(p.fecha)}</span>
+                        <span style="font-size:0.75rem; background-color:${churchBg}; color:${churchColor}; border:1px solid ${churchColor}; padding:3px 8px; border-radius:12px; font-weight:bold;"><i class="fas ${churchIcon}"></i> ${p.iglesia}</span>
+                    </div>
+                    <div style="display:flex; align-items:center;">
+                        ${tagPredicador} ${statusLlego}
+                    </div>
+                </div>
+            `;
+        });
+        contenedor.innerHTML = htmlFinal;
+    }
+
     function cambiarSemana(direccion) {
         let fechaActual = new Date(sabadoVisto + "T12:00:00");
+
+
+
         fechaActual.setDate(fechaActual.getDate() + (direccion * 7));
         const año = fechaActual.getFullYear();
         const mes = String(fechaActual.getMonth() + 1).padStart(2, '0');
@@ -1995,11 +2125,16 @@
     // --- SISTEMA DE ATAJOS DE TECLADO ---
     let lastAltKTime = 0;
     let altKTimeout;
+    window.teclaPPresionada = false;
+    document.addEventListener('keyup', e => { if (e.key.toLowerCase() === 'p') window.teclaPPresionada = false; });
     document.addEventListener('keydown', e => {
+
+
+
         // 1. Control del botón ESCAPE para cerrar ventanas por capas o regresar a inicio
         if (e.key === 'Escape' || e.key === 'Esc') {
             const capasModales = [
-                { id: 'overlay-recordatorios', fn: () => { document.getElementById('overlay-recordatorios').remove(); if(document.getElementById('box-recordatorios')) document.getElementById('box-recordatorios').remove(); } },
+                { id: 'overlay-recordatorios', fn: () => { document.getElementById('overlay-recordatorios').remove(); if(document.getElementById('box-recordatorios')) document.getElementById('box-recordatorios').remove(); document.getElementById('btn-destacados-flotante').classList.remove('activo'); } },   
                 { id: 'overlay-permisos', fn: () => { document.getElementById('overlay-permisos').remove(); if(document.getElementById('msg-permisos')) document.getElementById('msg-permisos').remove(); } },
                 { id: 'modalConfigPastor' },
                 { id: 'modalIconos' },
@@ -2012,6 +2147,7 @@
                 { id: 'modalAgendaCompleta' },
                 { id: 'modalHistorial' },
                 { id: 'modalSustituciones' },
+                { id: 'modalMisPredicaciones' },
                 { id: 'modalInfoPredicacion' },
                 { id: 'modalPredicacion' },
                 { id: 'modalDiaCalendario' },
@@ -2042,15 +2178,25 @@
             return;
         }
 
+        if (e.key.toLowerCase() === 'p') window.teclaPPresionada = true;
+
         // Evitar que los atajos se disparen si el usuario está escribiendo dentro de un cuadro de texto
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
 
-        // Atajo para TODOS: Alt + Enter para abrir Login e ir a la contraseña
+        // Atajo secreto Alt + P + Enter o Login normal Alt + Enter
         if (e.altKey && e.key === 'Enter') {
             e.preventDefault();
-            showScreen('loginScreen');
+            if (window.teclaPPresionada) {
+                abrirMisPredicaciones();
+                setTimeout(() => document.getElementById('input-buscador-mis-predicaciones').focus(), 300);
+            } else {
+                showScreen('loginScreen');
+            }
             return;
         }
+
+
+
 
         // Atajo: Alt + K (Agenda Completa) y Alt + K + K (Visibilidad) - Solo Admins y Pastor
         if (e.altKey && (e.key === 'k' || e.key === 'K')) {
@@ -2101,19 +2247,41 @@
             abrirCalendarioMensual();
         }
 
-        // Atajos de navegación con flechas (Solo si está activa la Pantalla Principal)
-        if (document.getElementById('mainScreen').classList.contains('active')) {
+        // Atajos de navegación con flechas (Pantalla Principal y Calendarios)
+        if (document.getElementById('modalAgendaCompleta').style.display === 'block') {
             if (e.key === 'ArrowLeft') {
                 e.preventDefault();
-                cambiarSemana(-1); // Sábado anterior
+                cambiarMesGesto('mes-agenda-completa', -1, renderAgendaCompleta);
             }
             if (e.key === 'ArrowRight') {
                 e.preventDefault();
-                cambiarSemana(1); // Sábado siguiente
+                cambiarMesGesto('mes-agenda-completa', 1, renderAgendaCompleta);
             }
-            if (e.key === 'ArrowDown') {
+        } else if (document.getElementById('modalListaAgendaPastor').style.display === 'block') {
+            if (e.key === 'ArrowLeft') {
                 e.preventDefault();
-                volverASabadoProximo(); // Regresar al sábado real actual
+                cambiarMesGesto('filtro-mes-lista-agenda', -1, renderListaAgendaPastor);
+            }
+            if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                cambiarMesGesto('filtro-mes-lista-agenda', 1, renderListaAgendaPastor);
+            }
+        } else if (document.getElementById('mainScreen').classList.contains('active')) {
+            // Evitar que cambie de semana si hay alguna otra ventana abierta encima
+            let modalAbierto = Array.from(document.querySelectorAll('.modal-overlay')).some(m => m.style.display === 'block');
+            if (!modalAbierto) {
+                if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    cambiarSemana(-1); // Sábado anterior
+                }
+                if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    cambiarSemana(1); // Sábado siguiente
+                }
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    volverASabadoProximo(); // Regresar al sábado real actual
+                }
             }
         }
     });
@@ -2410,6 +2578,9 @@ function verificarFechaLaicosForm(fecha) {
                 document.getElementById('input-buscador-agenda').value = '';
                 toggleBuscadorAgenda(false);
             }
+            if (document.getElementById('botones-ajuste-masivo')) {
+                document.getElementById('botones-ajuste-masivo').style.display = (usuarioActual && usuarioActual.rol === 'super_admin') ? 'flex' : 'none';
+            }
             renderListaAgendaPastor();
             document.getElementById('modalListaAgendaPastor').style.display = 'block';
         }
@@ -2470,25 +2641,32 @@ function verificarFechaLaicosForm(fecha) {
                 let verAdmins = (visActual === 'todos' || visActual === 'admins') ? 'fa-eye ojo-on' : 'fa-eye-slash ojo-off';
                 
                 let starClass = evt.destacado ? 'fas fa-star' : 'far fa-star';
-                let starColor = evt.destacado ? '#ffd700' : '#ccc';
-                let starShadow = evt.destacado ? 'drop-shadow(0 0 4px rgba(255,215,0,0.8))' : 'none';
+                let starColor = evt.destacado ? '#FFD700' : '#ccc';
+
+                let esSuper = (usuarioActual && usuarioActual.rol === 'super_admin');
+                let clickUsers = esSuper ? `onclick="toggleVisibilidadAgenda('${evt.id}', 'users')"` : '';
+                let clickAdmins = esSuper ? `onclick="toggleVisibilidadAgenda('${evt.id}', 'admins')"` : '';
+                let cursorStyle = esSuper ? 'cursor:pointer;' : 'cursor:not-allowed; opacity:0.5;';
 
                 let actions = esFamPastoral ? 
-                    `<i class="fas fa-lock text-danger" style="font-size:1.2rem;" title="Estrictamente Privado"></i>` :
+                    `<i class="fas fa-lock text-danger" style="font-size:0.9rem;" title="Estrictamente Privado"></i>` :
                     `
-                    <div style="display:flex; flex-direction:column; align-items:center; gap:2px;">
-                        <i class="${starClass}" style="font-size:1.2rem; cursor:pointer; padding:4px; color:${starColor}; filter:${starShadow}; transition:0.3s;" onclick="toggleDestacadoAgenda('${evt.id}')" title="Destacar Evento"></i>
-                        <span style="font-size:0.55rem; color:#666; font-weight:bold;">Destacar</span>
+                    <div style="display:flex; flex-direction:column; align-items:center; gap:1px; margin-right:8px;">
+                        <i class="${starClass}" style="font-size:0.9rem; cursor:pointer; color:${starColor};" onclick="toggleDestacadoAgenda('${evt.id}')" title="Destacar"></i>
+                        <span style="font-size:0.5rem; color:#666;">Dest</span>
                     </div>
-                    <div style="display:flex; flex-direction:column; align-items:center; gap:2px; margin-left:10px;">
-                        <i class="fas ${verUsers}" style="font-size:1.2rem; cursor:pointer; padding:4px;" onclick="toggleVisibilidadAgenda('${evt.id}', 'users')" title="Visible para Usuarios"></i>
-                        <span style="font-size:0.55rem; color:#666; font-weight:bold;">Users</span>
+                    <div style="display:flex; flex-direction:column; align-items:center; gap:1px; margin-right:8px;">
+                        <i class="fas fa-calendar-day" style="font-size:0.9rem; cursor:pointer; color:#555;" onclick="irAFecha('${evt.date}')" title="Ir a fecha"></i>
+                        <span style="font-size:0.5rem; color:#666;">Ir</span>
                     </div>
-                    <div style="display:flex; flex-direction:column; align-items:center; gap:2px; margin-left:10px;">
-                        <i class="fas ${verAdmins}" style="font-size:1.2rem; cursor:pointer; padding:4px;" onclick="toggleVisibilidadAgenda('${evt.id}', 'admins')" title="Visible para Admins"></i>
-                        <span style="font-size:0.55rem; color:#666; font-weight:bold;">Admins</span>
+                    <div style="display:flex; flex-direction:column; align-items:center; gap:1px; margin-right:8px;">
+                        <i class="fas ${verUsers}" style="font-size:0.9rem; ${cursorStyle}" ${clickUsers} title="Usuarios"></i>
+                        <span style="font-size:0.5rem; color:#666;">Users</span>
+                    </div>
+                    <div style="display:flex; flex-direction:column; align-items:center; gap:1px;">
+                        <i class="fas ${verAdmins}" style="font-size:0.9rem; ${cursorStyle}" ${clickAdmins} title="Admins"></i>
+                        <span style="font-size:0.55rem; color:#666;">Admins</span>
                     </div>`;
-
 
 
 
@@ -2508,6 +2686,15 @@ function verificarFechaLaicosForm(fecha) {
 
             contenedor.innerHTML = htmlLista;
         }
+
+
+        function irAFecha(fecha) {
+            sabadoVisto = fecha;
+            document.getElementById('modalListaAgendaPastor').style.display = 'none';
+            document.getElementById('modalAgendaCompleta').style.display = 'none';
+            showScreen('mainScreen');
+        }
+
 
         function toggleDestacadoAgenda(id) {
             let evt = eventosAgenda.find(e => e.id === id);
@@ -3332,10 +3519,11 @@ function verificarFechaLaicosForm(fecha) {
                     }
 
                     let fechaFormateada = formatearFechaVisual(fechaISO);
+                    let circulo = asignados > 0 ? `<span style="background:var(--primary); color:white; border-radius:50%; width:20px; height:20px; display:inline-flex; align-items:center; justify-content:center; font-size:0.7rem; margin-right:5px;">${asignados}</span>` : '';
                     contenedor.innerHTML += `
                         <div class="card ${claseParpadeo}" style="background-color: ${bgCol}; border-left-color: ${borderCol}; cursor: pointer;" onclick="abrirDetalleDia('${fechaISO}', '${nombreDia}')">
-                            <div class="card-predicador">${nombreDia} ${fechaFormateada} ${estadoSabado}</div>
-                            <div class="card-iglesia">Predicadores asignados: <b>${asignados}</b></div>
+                            <div class="card-predicador">${circulo} ${nombreDia} ${fechaFormateada} ${estadoSabado}</div>
+                            <div class="card-iglesia">${asignados > 0 ? '<span style="background:var(--primary); color:white; border-radius:50%; width:20px; height:20px; display:inline-flex; align-items:center; justify-content:center; font-size:0.7rem; margin-right:5px;">' + asignados + '</span>' : ''} Predicadores asignados: <b>${asignados}</b></div>
                         </div>
                     `;
                 }
