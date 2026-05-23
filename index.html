@@ -5,6 +5,7 @@
             <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
             <title>Predicaciones</title>
             <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+            <!--<link rel="stylesheet" href="all.min.css">   -->
 
 
             <!-- APK APLICAR:     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">     -->
@@ -146,6 +147,7 @@
                 </div>
             </div>
             <div class="info-bar" id="info-bar">Sábado: Calculando... | Usuario: Invitado</div>
+            <div id="offline-banner" style="display:none; background:#dc3545; color:white; text-align:center; padding:8px; font-weight:bold; font-size:0.9rem; position:sticky; top:0; z-index:9999;"><i class="fas fa-wifi"></i> OFFLINE - Puedes seguir creando, editando y eliminando. Se subira al volver el internet.</div>
 
             <div id="mainScreen" class="screen active">
                 <div style="text-align: center; color: #555; font-size: 0.95rem; font-weight: bold; margin-bottom: 15px; text-transform: uppercase;">Predicaciones para el</div>
@@ -1845,20 +1847,135 @@
                 // Configuración de IndexedDB (Base de datos local real, no LocalStorage)
                 const dbName = "PredicacionesDB";
                 let db;
-                const requestDB = indexedDB.open(dbName, 1);
+                const requestDB = indexedDB.open(dbName, 2);
                 requestDB.onupgradeneeded = function(event) {
                     db = event.target.result;
                     if (!db.objectStoreNames.contains("backup")) {
                         db.createObjectStore("backup");
                     }
+                    if (!db.objectStoreNames.contains("cola")) {
+                        db.createObjectStore("cola", { keyPath: "id", autoIncrement: true });
+                    }
                 };
-                requestDB.onsuccess = function(event) { db = event.target.result; };
+                requestDB.onsuccess = function(event) { 
+                    db = event.target.result;
+                    setInterval(guardarEnDatabaseLocal, 5000);
+                    window.addEventListener('online', procesarColaPendiente);
+                    window.addEventListener('online', actualizarEstadoConexion);
+                    window.addEventListener('offline', actualizarEstadoConexion);
+                    procesarColaPendiente();
+                    actualizarEstadoConexion();
+                };
 
                 function guardarEnDatabaseLocal() {
                     if (!db) return;
                     const transaction = db.transaction(["backup"], "readwrite");
                     const store = transaction.objectStore("backup");
                     store.put(datosLocales, "estado_actual");
+                }
+
+                function guardarEnCola() {
+                    if (!db) return;
+                    const transaction = db.transaction(["cola"], "readwrite");
+                    const store = transaction.objectStore("cola");
+                    store.add({ datos: JSON.parse(JSON.stringify(datosLocales)), timestamp: new Date().toISOString() });
+                }
+
+                function guardarEnColaAgenda() {
+                    if (!db) return;
+                    const transaction = db.transaction(["cola"], "readwrite");
+                    const store = transaction.objectStore("cola");
+                    store.add({ tipo: "agenda", eventos: JSON.parse(JSON.stringify(eventosAgenda)), departamentos: JSON.parse(JSON.stringify(departamentosAgenda)), timestamp: new Date().toISOString() });
+                }
+
+                async function procesarColaPendiente() {
+                    if (!db || !navigator.onLine) return;
+                    const transaction = db.transaction(["cola"], "readwrite");
+                    const store = transaction.objectStore("cola");
+                    const getAll = store.getAll();
+                    getAll.onsuccess = async function() {
+                        const items = getAll.result;
+                        if (items.length === 0) return;
+                        for (const item of items) {
+                            try {
+                                if (item.tipo === "agenda") {
+                                    eventosAgenda = item.eventos;
+                                    departamentosAgenda = item.departamentos;
+                                    await subirCambiosKalender();
+                                } else {
+                                    datosLocales = item.datos;
+                                    await saveGist(true);
+                                }
+                                store.delete(item.id);
+                            } catch(e) { break; }
+                        }
+                        mostrarAvisoConexion(items.length);
+                    };
+                }
+
+                function mostrarAvisoConexion(cantidad) {
+                    const aviso = document.createElement('div');
+                    aviso.style.cssText = 'position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#28a745; color:white; padding:12px 20px; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.3); z-index:10001; font-weight:bold; text-align:center;';
+                    aviso.innerHTML = `<i class="fas fa-wifi"></i> ¡Conexion restablecida!<br><small>${cantidad} cambio(s) local(es) subidos correctamente</small>`;
+                    document.body.appendChild(aviso);
+                    setTimeout(() => { if(aviso.parentNode) aviso.remove(); }, 4000);
+                }
+
+                function actualizarEstadoConexion() {
+                    const banner = document.getElementById('offline-banner');
+                    if (!banner) return;
+                    if (navigator.onLine) {
+                        banner.style.display = 'none';
+                    } else {
+                        banner.style.display = 'block';
+                    }
+                }
+
+                function guardarEnCola() {
+                    if (!db) return;
+                    const transaction = db.transaction(["cola"], "readwrite");
+                    const store = transaction.objectStore("cola");
+                    store.add({ datos: JSON.parse(JSON.stringify(datosLocales)), timestamp: new Date().toISOString() });
+                }
+
+                function guardarEnColaAgenda() {
+                    if (!db) return;
+                    const transaction = db.transaction(["cola"], "readwrite");
+                    const store = transaction.objectStore("cola");
+                    store.add({ tipo: "agenda", eventos: JSON.parse(JSON.stringify(eventosAgenda)), departamentos: JSON.parse(JSON.stringify(departamentosAgenda)), timestamp: new Date().toISOString() });
+                }
+
+                async function procesarColaPendiente() {
+                    if (!db || !navigator.onLine) return;
+                    const transaction = db.transaction(["cola"], "readwrite");
+                    const store = transaction.objectStore("cola");
+                    const getAll = store.getAll();
+                    getAll.onsuccess = async function() {
+                        const items = getAll.result;
+                        if (items.length === 0) return;
+                        for (const item of items) {
+                            try {
+                                if (item.tipo === "agenda") {
+                                    eventosAgenda = item.eventos;
+                                    departamentosAgenda = item.departamentos;
+                                    await subirCambiosKalender();
+                                } else {
+                                    datosLocales = item.datos;
+                                    await saveGist(true);
+                                }
+                                store.delete(item.id);
+                            } catch(e) { break; }
+                        }
+                        mostrarAvisoConexion(items.length);
+                    };
+                }
+
+                function mostrarAvisoConexion(cantidad) {
+                    const aviso = document.createElement('div');
+                    aviso.style.cssText = 'position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#28a745; color:white; padding:12px 20px; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0.3); z-index:10001; font-weight:bold; text-align:center;';
+                    aviso.innerHTML = `<i class="fas fa-wifi"></i> ¡Conexión restablecida!<br><small>${cantidad} cambio(s) local(es) subidos correctamente</small>`;
+                    document.body.appendChild(aviso);
+                    setTimeout(() => { if(aviso.parentNode) aviso.remove(); }, 4000);
                 }
 
                 // API Fetch REAL conectada a Gist y a la Database Local
@@ -1899,13 +2016,11 @@
 
 
 
-                async function saveGist() {
+                async function saveGist(esReintento = false) {
                     delete datosLocales.auditoria; // ELIMINA TODA LA BASURA ANTES DE SUBIR
                     console.log("Guardando en GitHub Gist y Base de Datos Local...", datosLocales);
                     guardandoEnNube = true; // Cerrar el candado
                     guardarEnDatabaseLocal(); // Guardado local inmediato
-
-
 
                     try {
                         let url = `https://api.github.com/gists/${GIST_ID}`;
@@ -1918,19 +2033,17 @@
                         // Muestra en un popup el número de error exacto
                         if (!res.ok) {
                             let textoError = await res.text();
-                            alert("CÓDIGO DE FALLA DE GITHUB: " + res.status + "\n" + textoError);
+                            if (!esReintento) alert("CÓDIGO DE FALLA DE GITHUB: " + res.status + "\n" + textoError);
                             console.log("LOG PREDYGMA - DETALLE DE FALLA DE SUBIDA: " + res.status + " - " + textoError);
+                            if (!navigator.onLine) throw new Error("offline");
                         } else {
                             console.log("LOG PREDYGMA - SUBIDA EXITOSA!");
                         }
                     } catch (error) {
 
-
-
-
-
-
                         console.log("No hay internet, pero se guardó de forma segura en la Database Local.");
+                        guardarEnCola();
+                        if (!esReintento) throw error;
                     } finally {
                         guardandoEnNube = false; // Abrir el candado termine bien o falle
                     }
@@ -3174,7 +3287,8 @@
                             body: JSON.stringify({ files: { "calendar_data.json": { content: JSON.stringify(payload, null, 4) } } })
                         });
                     } catch(e) {
-                        alert("Error de red al guardar en Kalender");
+                        guardarEnColaAgenda();
+                        console.log("Kalender guardado localmente en cola");
                     }
                 }
 
